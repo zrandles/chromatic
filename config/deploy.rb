@@ -50,6 +50,10 @@ set :assets_prefix, 'assets'
 set :assets_roles, [:web, :app]
 set :keep_assets, 2
 
+# Clear default asset tasks so we can define custom ones
+Rake::Task['deploy:assets:precompile'].clear_actions if Rake::Task.task_defined?('deploy:assets:precompile')
+Rake::Task['deploy:assets:backup_manifest'].clear_actions if Rake::Task.task_defined?('deploy:assets:backup_manifest')
+
 namespace :deploy do
   desc 'Restart Puma server'
   task :restart_puma_sudo do
@@ -136,9 +140,6 @@ namespace :deploy do
   end
 end
 # Hooks
-Rake::Task['deploy:assets:precompile'].clear_actions
-Rake::Task['deploy:assets:backup_manifest'].clear_actions
-
 after 'bundler:install', 'deploy:generate_binstubs'
 before 'deploy:publishing', 'deploy:assets:precompile'
 after 'deploy:publishing', 'deploy:restart'
