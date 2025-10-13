@@ -1,4 +1,19 @@
 <div class="max-w-7xl mx-auto p-8">
+  <!-- Turn Indicator -->
+  <% if @game.status == 'active' %>
+    <div class="mb-6 text-center">
+      <% if @game.game_state['turn'] == 'player' %>
+        <div class="inline-block px-8 py-4 bg-green-100 border-2 border-green-500 text-green-800 rounded-lg text-2xl font-bold">
+          YOUR TURN
+        </div>
+      <% else %>
+        <div class="inline-block px-8 py-4 bg-gray-100 border-2 border-gray-400 text-gray-600 rounded-lg text-2xl font-bold">
+          AI THINKING...
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <!-- Header -->
   <div class="flex justify-between items-center mb-8">
     <div>
@@ -43,6 +58,33 @@
     </div>
   <% end %>
 
+  <!-- Color Rules Reference -->
+  <div class="mb-6 bg-gray-50 rounded-lg p-6 border-2 border-gray-200">
+    <h3 class="text-xl font-bold mb-4">Color Rules Reference</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="bg-white p-3 rounded border-l-4 border-red-500">
+        <div class="font-bold text-red-600 mb-1">Red</div>
+        <div class="text-sm text-gray-700">Ascending with jumps (no consecutive numbers)</div>
+      </div>
+      <div class="bg-white p-3 rounded border-l-4 border-blue-500">
+        <div class="font-bold text-blue-600 mb-1">Blue</div>
+        <div class="text-sm text-gray-700">Waves (alternating up/down)</div>
+      </div>
+      <div class="bg-white p-3 rounded border-l-4 border-green-500">
+        <div class="font-bold text-green-600 mb-1">Green</div>
+        <div class="text-sm text-gray-700">Consecutive numbers only</div>
+      </div>
+      <div class="bg-white p-3 rounded border-l-4 border-yellow-500">
+        <div class="font-bold text-yellow-600 mb-1">Yellow</div>
+        <div class="text-sm text-gray-700">Solo cards (1 card max)</div>
+      </div>
+      <div class="bg-white p-3 rounded border-l-4 border-purple-500">
+        <div class="font-bold text-purple-600 mb-1">Purple</div>
+        <div class="text-sm text-gray-700">Descending exponentially (each card ≤70% of previous)</div>
+      </div>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Player Side -->
     <div>
@@ -80,7 +122,12 @@
   <!-- Your Hand -->
   <% if @game.status == 'active' %>
     <div class="mt-8">
-      <h2 class="text-2xl font-bold mb-4">Your Hand (<%= @game.player_hand.length %> cards)</h2>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Your Hand (<%= @game.player_hand.length %> cards)</h2>
+        <div class="text-sm text-gray-600 bg-yellow-50 border border-yellow-300 rounded px-3 py-1">
+          Starting a new path costs 3 cards (2 random cards discarded)
+        </div>
+      </div>
       <div class="flex flex-wrap gap-3">
         <% @game.player_hand.each_with_index do |card, index| %>
           <%= render partial: 'card', locals: { card: card, index: index, game: @game } %>

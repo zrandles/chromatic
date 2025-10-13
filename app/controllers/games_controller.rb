@@ -1,4 +1,7 @@
 class GamesController < ApplicationController
+  # Skip CSRF for game creation (simple game, no user auth)
+  skip_forgery_protection only: [:create, :play_card, :end_turn]
+
   def index
     @games = Game.order(created_at: :desc).limit(10)
   end
