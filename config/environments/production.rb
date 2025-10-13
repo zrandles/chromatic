@@ -43,6 +43,9 @@ Rails.application.configure do
   # Prevent health checks from clogging up the logs.
   config.silence_healthcheck_path = "/up"
 
+  # Configure app to be served from subdirectory (for path-based routing on shared server)
+  config.relative_url_root = "/chromatic"
+
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
