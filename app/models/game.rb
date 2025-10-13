@@ -215,22 +215,47 @@ class Game < ApplicationRecord
   end
 
   def end_round
-    # Calculate scores
-    self.player_score = player_paths.sum(:score)
-    self.ai_score = ai_paths.sum(:score)
+    # Calculate scores for this round
+    round_player_score = player_paths.sum(:score)
+    round_ai_score = ai_paths.sum(:score)
 
-    self.current_round += 1
+    # Store round summary in game_state
+    game_state['round_summary'] = {
+      'round' => current_round,
+      'player_round_score' => round_player_score,
+      'ai_round_score' => round_ai_score,
+      'player_total_before' => player_score,
+      'ai_total_before' => ai_score
+    }
 
-    if current_round > total_rounds
+    # Update total scores
+    self.player_score += round_player_score
+    self.ai_score += round_ai_score
+
+    # Set status to show round summary
+    if current_round >= total_rounds
       self.status = 'finished'
     else
-      # Reset for next round
-      color_paths.destroy_all
-      game_state['player_hand'] = draw_hand
-      game_state['ai_hand'] = draw_hand
-      game_state['deck'] = create_deck
-      game_state['turn'] = 'player'
+      self.status = 'round_ending'
     end
+
+    save
+  end
+
+  def continue_to_next_round
+    # Clear round summary
+    game_state['round_summary'] = nil
+
+    # Advance to next round
+    self.current_round += 1
+    self.status = 'active'
+
+    # Reset for next round
+    color_paths.destroy_all
+    game_state['player_hand'] = draw_hand
+    game_state['ai_hand'] = draw_hand
+    game_state['deck'] = create_deck
+    game_state['turn'] = 'player'
 
     save
   end

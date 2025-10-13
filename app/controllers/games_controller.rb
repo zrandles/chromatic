@@ -1,6 +1,6 @@
 class GamesController < ApplicationController
   # Skip CSRF for game creation (simple game, no user auth)
-  skip_forgery_protection only: [:create, :play_card, :end_turn]
+  skip_forgery_protection only: [:create, :play_card, :end_turn, :continue_round]
 
   def index
     @games = Game.order(created_at: :desc).limit(10)
@@ -34,5 +34,11 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
     @game.end_turn
     redirect_to game_path(@game)
+  end
+
+  def continue_round
+    @game = Game.find(params[:id])
+    @game.continue_to_next_round
+    redirect_to game_path(@game), notice: "Starting Round #{@game.current_round}!"
   end
 end

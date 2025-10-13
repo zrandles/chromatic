@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       member do
         post :play_card
         post :end_turn
+        post :continue_round
       end
     end
 
