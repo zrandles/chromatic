@@ -17,12 +17,20 @@ class Game < ApplicationRecord
     self.total_rounds ||= TOTAL_ROUNDS
     self.player_score ||= 0
     self.ai_score ||= 0
-    self.game_state ||= {
-      'player_hand' => draw_hand,
-      'ai_hand' => draw_hand,
-      'deck' => create_deck,
-      'turn' => 'player'
-    }
+
+    unless game_state
+      # Initialize game_state with deck FIRST so draw_hand can access it
+      self.game_state = {
+        'deck' => create_deck,
+        'player_hand' => [],
+        'ai_hand' => [],
+        'turn' => 'player'
+      }
+
+      # Now draw hands - game_state['deck'] is accessible
+      self.game_state['player_hand'] = draw_hand
+      self.game_state['ai_hand'] = draw_hand
+    end
   end
 
   def create_deck
@@ -38,16 +46,16 @@ class Game < ApplicationRecord
   def draw_hand
     cards = []
     HAND_SIZE.times do
-      cards << draw_card
+      cards << draw_card(save_after: false)
     end
     cards
   end
 
-  def draw_card
+  def draw_card(save_after: true)
     deck = game_state['deck']
     return nil if deck.empty?
     card = deck.shift
-    save
+    save if save_after
     card
   end
 
