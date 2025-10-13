@@ -84,6 +84,11 @@ class Game < ApplicationRecord
     path = color_paths.find_by(color: color, player_type: player_type)
 
     if path.nil?
+      # Validate card color matches path color when starting new path
+      if card['color'] != color
+        return { success: false, error: "Card color must match path color. This #{card['color']} card cannot start a #{color} path." }
+      end
+
       # Starting new path costs 3 cards
       if hand.length < START_PATH_COST
         return { success: false, error: 'Need 3 cards to start a path' }
@@ -108,10 +113,17 @@ class Game < ApplicationRecord
       )
 
       # Draw cards to refill hand
+      drew_count = 0
       cards_to_discard.length.times do
         drawn = draw_card
-        hand << drawn if drawn
+        if drawn
+          hand << drawn
+          drew_count += 1
+        end
       end
+
+      save
+      return { success: true, path: path, drew_cards: drew_count }
     else
       # Adding to existing path
       cards = JSON.parse(path.cards_data)
@@ -133,12 +145,16 @@ class Game < ApplicationRecord
       hand.delete_at(card_index)
 
       # Draw a card
+      drew_count = 0
       drawn = draw_card
-      hand << drawn if drawn
-    end
+      if drawn
+        hand << drawn
+        drew_count = 1
+      end
 
-    save
-    { success: true, path: path }
+      save
+      return { success: true, path: path, drew_cards: drew_count }
+    end
   end
 
   def validate_card_play(card, existing_cards, color)

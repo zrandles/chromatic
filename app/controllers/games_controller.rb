@@ -24,7 +24,8 @@ class GamesController < ApplicationController
     )
 
     if result[:success]
-      redirect_to game_path(@game), notice: 'Card played successfully!'
+      drew_cards = result[:drew_cards] || 1
+      redirect_to game_path(@game), notice: "Card played! Drew #{drew_cards} card#{'s' if drew_cards > 1}."
     else
       redirect_to game_path(@game), alert: result[:error]
     end

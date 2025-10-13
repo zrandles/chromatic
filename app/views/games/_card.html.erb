@@ -16,11 +16,15 @@
     <%= form_with url: play_card_game_path(game), method: :post, local: true do |f| %>
       <%= f.hidden_field :card_index, value: index %>
       <%
-        existing_colors = game.player_paths.pluck(:color)
-        color_options = Game::COLORS.map do |color|
-          label = color.capitalize
-          label += " (costs 3 cards)" unless existing_colors.include?(color)
-          [label, color]
+        # Only show the matching color (card color must match path color)
+        card_obj = OpenStruct.new(card)
+        valid_colors = [card_obj.color]
+        existing_path_colors = game.player_paths.pluck(:color)
+
+        color_options = valid_colors.map do |path_color|
+          is_new_path = !existing_path_colors.include?(path_color)
+          label = is_new_path ? "#{path_color.capitalize} (costs 3 cards)" : path_color.capitalize
+          [label, path_color]
         end
       %>
       <%= f.select :color, color_options, {}, class: "w-full text-xs p-1 border rounded" %>
