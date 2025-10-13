@@ -85,11 +85,14 @@ namespace :deploy do
       # Do nothing
     end
 
-    desc 'Precompile assets using Propshaft'
+    desc 'Precompile assets using Propshaft and build Tailwind CSS'
     task :precompile do
       on roles(:web) do
         within release_path do
           with rails_env: fetch(:rails_env) do
+            # Build Tailwind CSS first
+            execute :bundle, 'exec', 'rails', 'tailwindcss:build'
+            # Then precompile other assets with Propshaft
             execute :bundle, 'exec', 'rails', 'assets:precompile'
           end
         end
