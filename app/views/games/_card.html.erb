@@ -1,0 +1,22 @@
+<div class="relative">
+  <div class="w-24 h-32 rounded-lg shadow-lg border-2 flex flex-col items-center justify-center bg-white hover:shadow-xl transition-shadow cursor-pointer
+    <%= case card['color']
+        when 'red' then 'border-red-500 text-red-600'
+        when 'blue' then 'border-blue-500 text-blue-600'
+        when 'green' then 'border-green-500 text-green-600'
+        when 'yellow' then 'border-yellow-500 text-yellow-600'
+        when 'purple' then 'border-purple-500 text-purple-600'
+        end %>">
+    <div class="text-5xl font-bold"><%= card['number'] %></div>
+    <div class="text-xs uppercase font-semibold mt-2"><%= card['color'] %></div>
+  </div>
+
+  <!-- Color selection dropdown -->
+  <div class="mt-2">
+    <%= form_with url: play_card_game_path(game), method: :post, local: true do |f| %>
+      <%= f.hidden_field :card_index, value: index %>
+      <%= f.select :color, Game::COLORS, {}, class: "w-full text-xs p-1 border rounded" %>
+      <%= f.submit "Play", class: "w-full mt-1 text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+<div class="max-w-4xl mx-auto p-8">
+  <div class="text-center mb-8">
+    <h1 class="text-5xl font-bold mb-2">Chromatic</h1>
+    <p class="text-xl text-gray-600 mb-8">Build color paths. Score exponentially.</p>
+
+    <%= button_to "Start New Game", games_path, method: :post, class: "px-8 py-4 bg-blue-600 text-white rounded-lg text-xl hover:bg-blue-700" %>
+  </div>
+
+  <% if @games.any? %>
+    <div class="mt-12">
+      <h2 class="text-2xl font-bold mb-4">Recent Games</h2>
+      <div class="space-y-2">
+        <% @games.each do |game| %>
+          <div class="border rounded-lg p-4 hover:bg-gray-50">
+            <%= link_to game_path(game), class: "flex justify-between items-center" do %>
+              <div>
+                <span class="font-semibold">Game <%= game.id %></span>
+                <span class="text-gray-500 ml-4">Round <%= game.current_round %> of <%= game.total_rounds %></span>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-gray-500">Score</div>
+                <div class="font-bold">
+                  You: <%= game.player_score %> | AI: <%= game.ai_score %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mt-12 bg-gray-50 rounded-lg p-6">
+    <h3 class="text-xl font-bold mb-4">How to Play</h3>
+    <ul class="space-y-2 text-gray-700">
+      <li><strong>Goal:</strong> Build color paths following each color's rules</li>
+      <li><strong>Starting a path costs 3 cards</strong> (discard 2 extras)</li>
+      <li><strong>Scoring:</strong> (cards in path)² - Longer paths = exponential points!</li>
+      <li><strong>Color Rules:</strong>
+        <ul class="ml-6 mt-2 space-y-1">
+          <li><span class="px-2 py-1 bg-red-500 text-white rounded">Red</span>: Ascending with jumps (no consecutive numbers)</li>
+          <li><span class="px-2 py-1 bg-blue-500 text-white rounded">Blue</span>: Waves (alternating up/down)</li>
+          <li><span class="px-2 py-1 bg-green-500 text-white rounded">Green</span>: Consecutive numbers only</li>
+          <li><span class="px-2 py-1 bg-yellow-500 text-white rounded">Yellow</span>: Solo cards (1 card max)</li>
+          <li><span class="px-2 py-1 bg-purple-500 text-white rounded">Purple</span>: Descending exponentially</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>

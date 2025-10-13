@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  game: one
+  color: MyString
+  cards_data: MyText
+  score: 1
+  player_type: MyString
+
+two:
+  game: two
+  color: MyString
+  cards_data: MyText
+  score: 1
+  player_type: MyString

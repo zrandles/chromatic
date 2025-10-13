@@ -1,0 +1,30 @@
+<div class="border-2 rounded-lg p-4
+  <%= case path.color
+      when 'red' then 'border-red-500 bg-red-50'
+      when 'blue' then 'border-blue-500 bg-blue-50'
+      when 'green' then 'border-green-500 bg-green-50'
+      when 'yellow' then 'border-yellow-500 bg-yellow-50'
+      when 'purple' then 'border-purple-500 bg-purple-50'
+      end %>">
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-lg font-bold capitalize"><%= path.color %> Path</div>
+    <div class="text-xl font-bold">
+      <%= path.cards.length %> cards = <%= path.score %> pts
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    <% path.cards.each do |card| %>
+      <div class="w-16 h-20 rounded-lg border-2 flex flex-col items-center justify-center bg-white
+        <%= case card['color']
+            when 'red' then 'border-red-500 text-red-600'
+            when 'blue' then 'border-blue-500 text-blue-600'
+            when 'green' then 'border-green-500 text-green-600'
+            when 'yellow' then 'border-yellow-500 text-yellow-600'
+            when 'purple' then 'border-purple-500 text-purple-600'
+            end %>">
+        <div class="text-3xl font-bold"><%= card['number'] %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
