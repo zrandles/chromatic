@@ -158,6 +158,26 @@ ssh zac@24.199.71.69 'cd /home/zac/chromatic/current && RBENV_ROOT=$HOME/.rbenv 
 
 None currently! Game is playable and working in production.
 
+## Recent Bug Fixes
+
+### 2025-10-13: Missing Tailwind CSS in Production
+**Problem**: Game displayed as completely unstyled HTML (black text on white background).
+
+**Root Cause**:
+1. Tailwind CSS gem was installed but never initialized (no config file)
+2. Capistrano deployment wasn't compiling Tailwind CSS during `deploy:assets:precompile`
+3. Task clearing order issue: `Rake::Task['deploy:assets:precompile'].clear_actions` was called AFTER defining custom task, resulting in empty task
+
+**Solution**:
+1. Modified `config/deploy.rb` to run `rails tailwindcss:build` before `rails assets:precompile`
+2. Moved `clear_actions` calls to BEFORE custom task definitions
+3. Manually compiled assets on production server to fix immediate issue
+
+**Files Changed**:
+- `/Users/zac/zac_ecosystem/apps/chromatic/config/deploy.rb` (lines 53-55, 88-100)
+
+**Verification**: http://24.199.71.69/chromatic now displays with full Tailwind CSS styling
+
 ## Development Notes
 
 ### Testing Locally
