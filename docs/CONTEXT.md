@@ -178,6 +178,25 @@ None currently! Game is playable and working in production.
 
 **Verification**: http://24.199.71.69/chromatic now displays with full Tailwind CSS styling
 
+### 2025-10-13: Asset Path Issue for Subdirectory Deployment
+**Problem**: Assets referenced as `/assets/...` instead of `/chromatic/assets/...`, causing CSS not to load.
+
+**Root Cause**:
+- Rails didn't know the app was mounted under `/chromatic` subdirectory
+- HTML output showed: `<link rel="stylesheet" href="/assets/tailwind-95092246.css" />`
+- Should be: `<link rel="stylesheet" href="/chromatic/assets/tailwind-95092246.css" />`
+- Assets were accessible at `/chromatic/assets/` via nginx but Rails wasn't generating correct paths
+
+**Solution**:
+Added `config.relative_url_root = "/chromatic"` to `config/environments/production.rb`
+
+**Files Changed**:
+- `/Users/zac/zac_ecosystem/apps/chromatic/config/environments/production.rb` (line 47)
+
+**Verification**: Asset paths now correctly include `/chromatic` prefix. Confirmed with:
+- `curl http://24.199.71.69/chromatic` shows `href="/chromatic/assets/tailwind-95092246.css"`
+- `curl -I http://24.199.71.69/chromatic/assets/tailwind-95092246.css` returns 200 OK
+
 ## Development Notes
 
 ### Testing Locally
