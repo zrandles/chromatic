@@ -1,34 +1,42 @@
-<div class="relative">
-  <div class="w-24 h-32 rounded-lg shadow-lg border-2 flex flex-col items-center justify-center bg-white hover:shadow-xl transition-shadow cursor-pointer
-    <%= case card['color']
-        when 'red' then 'border-red-500 text-red-600'
-        when 'blue' then 'border-blue-500 text-blue-600'
-        when 'green' then 'border-green-500 text-green-600'
-        when 'yellow' then 'border-yellow-500 text-yellow-600'
-        when 'purple' then 'border-purple-500 text-purple-600'
-        end %>">
-    <div class="text-5xl font-bold"><%= card['number'] %></div>
-    <div class="text-xs uppercase font-semibold mt-2"><%= card['color'] %></div>
-  </div>
+<%
+  # Determine if this creates a new path
+  existing_path_colors = game.player_paths.pluck(:color)
+  is_new_path = !existing_path_colors.include?(card['color'])
+  card_color_class = case card['color']
+    when 'red' then 'border-red-500 text-red-600 hover:border-red-600 hover:shadow-red-200'
+    when 'blue' then 'border-blue-500 text-blue-600 hover:border-blue-600 hover:shadow-blue-200'
+    when 'green' then 'border-green-500 text-green-600 hover:border-green-600 hover:shadow-green-200'
+    when 'yellow' then 'border-yellow-500 text-yellow-600 hover:border-yellow-600 hover:shadow-yellow-200'
+    when 'purple' then 'border-purple-500 text-purple-600 hover:border-purple-600 hover:shadow-purple-200'
+  end
+%>
 
-  <!-- Color selection dropdown -->
-  <div class="mt-2">
-    <%= form_with url: play_card_game_path(game), method: :post, local: true do |f| %>
-      <%= f.hidden_field :card_index, value: index %>
-      <%
-        # Only show the matching color (card color must match path color)
-        card_obj = OpenStruct.new(card)
-        valid_colors = [card_obj.color]
-        existing_path_colors = game.player_paths.pluck(:color)
+<div class="relative group">
+  <%= form_with url: play_card_game_path(game), method: :post, local: true, class: "contents" do |f| %>
+    <%= f.hidden_field :card_index, value: index %>
+    <%= f.hidden_field :color, value: card['color'] %>
 
-        color_options = valid_colors.map do |path_color|
-          is_new_path = !existing_path_colors.include?(path_color)
-          label = is_new_path ? "#{path_color.capitalize} (costs 3 cards)" : path_color.capitalize
-          [label, path_color]
-        end
-      %>
-      <%= f.select :color, color_options, {}, class: "w-full text-xs p-1 border rounded" %>
-      <%= f.submit "Play", class: "w-full mt-1 text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" %>
-    <% end %>
+    <button type="submit" class="w-24 h-32 rounded-xl shadow-md border-3 flex flex-col items-center justify-center bg-white hover:shadow-2xl hover:-translate-y-1 transition-all duration-150 cursor-pointer <%= card_color_class %>">
+      <div class="text-5xl font-bold"><%= card['number'] %></div>
+      <div class="text-xs uppercase font-semibold mt-2 tracking-wide"><%= card['color'] %></div>
+
+      <% if is_new_path %>
+        <div class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white">
+          -3💳
+        </div>
+      <% end %>
+    </button>
+  <% end %>
+
+  <!-- Tooltip on hover -->
+  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+    <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-xl">
+      <% if is_new_path %>
+        Click to start <%= card['color'] %> path (costs 3 cards)
+      <% else %>
+        Click to add to your <%= card['color'] %> path
+      <% end %>
+      <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+    </div>
   </div>
 </div>

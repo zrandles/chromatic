@@ -19,30 +19,37 @@ class ColorPath < ApplicationRecord
 
     case color
     when 'red'
-      # Must ascend with jumps (no consecutive)
-      "Next: #{last_number + 2}-20 (no #{last_number + 1})"
+      # Must ascend with jumps of 2+
+      "Next: #{last_number + 2}+ (jump by 2 or more)"
     when 'blue'
-      # Waves (alternating up/down)
-      if card_array.length >= 2
-        last_direction = card_array[-1]['number'] > card_array[-2]['number'] ? 'up' : 'down'
-        if last_direction == 'up'
-          "Next: Must go down (1-#{last_number - 1})"
-        else
-          "Next: Must go up (#{last_number + 1}-20)"
-        end
+      # Pairs only
+      if card_array.length.odd?
+        "Next: #{last_number} (complete the pair)"
       else
-        "Next: Any number (will start wave pattern)"
+        prev_pair = card_array.length >= 2 ? card_array[-2]['number'] : nil
+        if prev_pair
+          "Next: Any number except #{prev_pair} (start new pair)"
+        else
+          "Next: Any number (start new pair)"
+        end
       end
     when 'green'
-      # Consecutive numbers only
-      "Next: #{last_number - 1} or #{last_number + 1} only"
+      # Consecutive but max 5
+      if card_array.length >= 5
+        "COMPLETE (5 cards max)"
+      else
+        "Next: #{last_number - 1} or #{last_number + 1} (#{5 - card_array.length} left)"
+      end
     when 'yellow'
-      # Solo cards - only one card per path
-      "COMPLETE (Yellow = 1 card max)"
+      # Multiples (same number)
+      if card_array.length >= 4
+        "COMPLETE (4 cards max)"
+      else
+        "Next: #{last_number} only (#{4 - card_array.length} more copies)"
+      end
     when 'purple'
-      # Descends exponentially
-      max_next = (last_number * 0.7).floor
-      "Next: 1-#{max_next} (≤70% of #{last_number})"
+      # Any descending
+      "Next: 1-#{last_number - 1} (any lower number)"
     end
   end
 end

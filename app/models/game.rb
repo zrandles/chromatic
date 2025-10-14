@@ -7,7 +7,7 @@ class Game < ApplicationRecord
   TOTAL_ROUNDS = 10
   HAND_SIZE = 7
   DECK_SIZE = 20 # 1-20 for each color
-  START_PATH_COST = 3 # cards
+  START_PATH_COST = 2 # cards (reduced from 3 to encourage multiple paths)
 
   after_initialize :setup_new_game, if: :new_record?
 
@@ -89,14 +89,14 @@ class Game < ApplicationRecord
         return { success: false, error: "Card color must match path color. This #{card['color']} card cannot start a #{color} path." }
       end
 
-      # Starting new path costs 3 cards
+      # Starting new path costs START_PATH_COST cards
       if hand.length < START_PATH_COST
-        return { success: false, error: 'Need 3 cards to start a path' }
+        return { success: false, error: "Need #{START_PATH_COST} cards to start a path" }
       end
 
-      # Discard 2 additional cards
+      # Discard additional cards (total START_PATH_COST)
       cards_to_discard = [card_index]
-      2.times do
+      (START_PATH_COST - 1).times do
         idx = (0...hand.length).to_a.reject { |i| cards_to_discard.include?(i) }.sample
         cards_to_discard << idx
       end
@@ -165,27 +165,36 @@ class Game < ApplicationRecord
 
     case color
     when 'red'
-      # Must ascend with jumps (no consecutive)
+      # CHANGED: Must ascend with jumps of 2+ (risk/reward: harder but can reach 10 cards)
       return { valid: false, error: 'Red must ascend' } unless new_num > numbers.last
-      return { valid: false, error: 'Red cannot have consecutive numbers' } if new_num == numbers.last + 1
+      return { valid: false, error: 'Red must jump by at least 2' } if new_num - numbers.last < 2
     when 'blue'
-      # Waves (alternating up/down)
-      if numbers.length >= 2
-        last_direction = numbers[-1] > numbers[-2] ? 'up' : 'down'
-        new_direction = new_num > numbers.last ? 'up' : 'down'
-        return { valid: false, error: 'Blue must wave (alternate up/down)' } if last_direction == new_direction
+      # CHANGED: Pairs only - play cards in matching pairs (1,1 → 5,5 → 12,12)
+      # This makes blue strategic: save pairs, get medium-length paths
+      if numbers.length.odd?
+        # Need to match the last card
+        return { valid: false, error: 'Blue must play matching pairs' } unless new_num == numbers.last
+      else
+        # Can play any card to start new pair (but must be different from last pair)
+        if numbers.length >= 2
+          return { valid: false, error: 'Blue cannot repeat the same pair' } if new_num == numbers[-2]
+        end
       end
     when 'green'
-      # Consecutive numbers only
+      # CHANGED: Consecutive BUT max 5 cards (limit the power)
       return { valid: false, error: 'Green must be consecutive' } unless (new_num - numbers.last).abs == 1
+      return { valid: false, error: 'Green maxes out at 5 cards' } if numbers.length >= 5
     when 'yellow'
-      # Solo cards - only one card per path
-      return { valid: false, error: 'Yellow can only have one card' } if numbers.length >= 1
+      # CHANGED: Multiples - play same number repeatedly (5,5,5,5)
+      # High risk (need multiple copies) but high reward (can get 4+ cards)
+      if numbers.any?
+        return { valid: false, error: 'Yellow must play the same number' } unless new_num == numbers.last
+      end
+      # Limit to prevent abuse
+      return { valid: false, error: 'Yellow maxes out at 4 cards' } if numbers.length >= 4
     when 'purple'
-      # Descends exponentially (each card should be roughly half previous)
+      # CHANGED: Descending by ANY amount (easier to build)
       return { valid: false, error: 'Purple must descend' } unless new_num < numbers.last
-      # For simplicity, just require significant decrease
-      return { valid: false, error: 'Purple must decrease significantly' } unless new_num <= numbers.last * 0.7
     end
 
     { valid: true }
@@ -209,37 +218,93 @@ class Game < ApplicationRecord
   end
 
   def ai_play
-    # Simple AI: Try to play any valid card
+    # Improved AI: Strategic card play with scoring evaluation
     hand = ai_hand
+    return if hand.empty?
 
-    # Try adding to existing paths first
+    best_move = nil
+    best_score = -1
+
+    # Evaluate extending existing paths (prioritize high-value moves)
     color_paths.where(player_type: 'ai').each do |path|
       hand.each_with_index do |card, idx|
         cards = JSON.parse(path.cards_data)
         if validate_card_play(card, cards, path.color)[:valid]
-          play_card(idx, path.color, 'ai')
-          return
+          # Score this move based on:
+          # 1. Score gain (new_score - old_score)
+          # 2. Path length (longer paths are more valuable)
+          current_score = cards.length ** 2
+          new_score = (cards.length + 1) ** 2
+          score_gain = new_score - current_score
+
+          # Bonus for completing paths to encourage multiple paths (combo multiplier)
+          path_bonus = color_paths.where(player_type: 'ai').count * 2
+
+          move_value = score_gain + path_bonus
+
+          if move_value > best_score
+            best_score = move_value
+            best_move = { type: :extend, card_idx: idx, color: path.color }
+          end
         end
       end
     end
 
-    # Try starting a new path if we have enough cards
+    # Evaluate starting new paths (balanced strategy: multiple paths for combos)
     if hand.length >= START_PATH_COST
-      card = hand[0]
-      play_card(0, card['color'], 'ai')
+      # Group cards by color to find best starting options
+      color_counts = hand.group_by { |c| c['color'] }.transform_values(&:count)
+
+      # Prioritize colors where we have multiple cards (better path potential)
+      color_counts.each do |color, count|
+        # Score based on:
+        # 1. Number of cards we have in this color (more = better path potential)
+        # 2. Whether we already have this path (diversity bonus for new colors)
+        existing_path = color_paths.find_by(color: color, player_type: 'ai')
+
+        diversity_bonus = existing_path ? 0 : 10  # Big bonus for starting new colors
+        move_value = count * 3 + diversity_bonus
+
+        if move_value > best_score
+          best_score = move_value
+          card_idx = hand.index { |c| c['color'] == color }
+          best_move = { type: :start, card_idx: card_idx, color: color }
+        end
+      end
+    end
+
+    # Execute best move
+    if best_move
+      play_card(best_move[:card_idx], best_move[:color], 'ai')
     end
   end
 
   def end_round
-    # Calculate scores for this round
-    round_player_score = player_paths.sum(:score)
-    round_ai_score = ai_paths.sum(:score)
+    # Calculate base scores for this round
+    player_base_score = player_paths.sum(:score)
+    ai_base_score = ai_paths.sum(:score)
+
+    # Apply combo multipliers based on number of paths completed
+    player_path_count = player_paths.count
+    ai_path_count = ai_paths.count
+
+    player_multiplier = calculate_combo_multiplier(player_path_count)
+    ai_multiplier = calculate_combo_multiplier(ai_path_count)
+
+    round_player_score = (player_base_score * player_multiplier).to_i
+    round_ai_score = (ai_base_score * ai_multiplier).to_i
 
     # Store round summary in game_state
     game_state['round_summary'] = {
       'round' => current_round,
       'player_round_score' => round_player_score,
       'ai_round_score' => round_ai_score,
+      'player_base_score' => player_base_score,
+      'ai_base_score' => ai_base_score,
+      'player_multiplier' => player_multiplier,
+      'ai_multiplier' => ai_multiplier,
+      'player_path_count' => player_path_count,
+      'ai_path_count' => ai_path_count,
       'player_total_before' => player_score,
       'ai_total_before' => ai_score
     }
@@ -256,6 +321,29 @@ class Game < ApplicationRecord
     end
 
     save
+  end
+
+  def calculate_combo_multiplier(path_count)
+    # Reward playing multiple colors with multipliers
+    # 1 path = 1.0x (base)
+    # 2 paths = 1.2x (+20%)
+    # 3 paths = 1.5x (+50%)
+    # 4 paths = 1.8x (+80%)
+    # 5 paths = 2.0x (+100%) - RAINBOW BONUS!
+    case path_count
+    when 0, 1
+      1.0
+    when 2
+      1.2
+    when 3
+      1.5
+    when 4
+      1.8
+    when 5
+      2.0  # Rainbow bonus!
+    else
+      2.0
+    end
   end
 
   def continue_to_next_round
