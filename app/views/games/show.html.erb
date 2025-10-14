@@ -251,12 +251,7 @@
   <!-- Your Hand -->
   <% if @game.status == 'active' %>
     <div class="mt-8 bg-gradient-to-b from-gray-50 to-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-      <div class="mb-4">
-        <div class="flex justify-between items-center">
-          <h2 class="text-2xl font-bold text-gray-800">🃏 Your Hand (<%= @game.player_hand.length %> cards)</h2>
-          <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, class: "px-8 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-bold transition-colors text-lg whitespace-nowrap", form: { style: "display: inline;" } %>
-        </div>
-      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">🃏 Your Hand (<%= @game.player_hand.length %> cards)</h2>
 
       <div class="flex flex-wrap gap-4 mb-4">
         <% @game.player_hand.each_with_index do |card, index| %>
@@ -264,8 +259,13 @@
         <% end %>
       </div>
 
+      <!-- End Turn Button - Prominent placement -->
+      <div class="mt-6 flex justify-center">
+        <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, class: "px-12 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-colors text-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95" %>
+      </div>
+
       <!-- Exponential scoring explainer -->
-      <div class="mt-4 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-4">
+      <div class="mt-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-4">
         <div class="flex items-start gap-3">
           <div class="text-2xl">📈</div>
           <div class="text-sm text-gray-800">
