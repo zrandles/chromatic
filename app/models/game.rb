@@ -5,9 +5,9 @@ class Game < ApplicationRecord
 
   COLORS = %w[red blue green yellow purple].freeze
   TOTAL_ROUNDS = 10
-  HAND_SIZE = 7
+  HAND_SIZE = 10 # Increased to allow multiple paths + extensions
   DECK_SIZE = 20 # 1-20 for each color
-  START_PATH_COST = 2 # cards (reduced from 3 to encourage multiple paths)
+  START_PATH_COST = 2 # cards (1 played + 1 discarded)
 
   after_initialize :setup_new_game, if: :new_record?
 
@@ -168,39 +168,62 @@ class Game < ApplicationRecord
 
     case color
     when 'red'
-      # CHANGED: Must ascend with jumps of 2+ (risk/reward: harder but can reach 10 cards)
+      # Must ascend with jumps of 2+ (risk/reward: harder but can reach 8 cards)
       return { valid: false, error: 'Red must ascend' } unless new_num > numbers.last
       return { valid: false, error: 'Red must jump by at least 2' } if new_num - numbers.last < 2
+      return { valid: false, error: 'Red maxes out at 8 cards' } if numbers.length >= 8
     when 'blue'
-      # CHANGED: Pairs only - play cards in matching pairs (1,1 → 5,5 → 12,12)
-      # This makes blue strategic: save pairs, get medium-length paths
+      # Pairs with flexibility: complete pairs, then can extend or start new pair
+      # Strategic: save pairs, decide between longer paths vs starting new colors
       if numbers.length.odd?
-        # Need to match the last card
-        return { valid: false, error: 'Blue must play matching pairs' } unless new_num == numbers.last
+        # Must complete the pair OR extend if last pair is complete (consecutive to last number)
+        is_matching_pair = new_num == numbers.last
+        is_consecutive = (new_num - numbers.last).abs == 1
+        return { valid: false, error: 'Blue must complete pair or extend consecutively' } unless is_matching_pair || is_consecutive
       else
-        # Can play any card to start new pair (but must be different from last pair)
+        # Starting new pair: can play any number except same as last pair's first card
         if numbers.length >= 2
-          return { valid: false, error: 'Blue cannot repeat the same pair' } if new_num == numbers[-2]
+          return { valid: false, error: 'Blue cannot repeat the previous pair' } if new_num == numbers[-2]
         end
       end
+      return { valid: false, error: 'Blue maxes out at 10 cards' } if numbers.length >= 10
     when 'green'
-      # CHANGED: Consecutive BUT max 5 cards (limit the power)
+      # Consecutive with reasonable cap
       return { valid: false, error: 'Green must be consecutive' } unless (new_num - numbers.last).abs == 1
-      return { valid: false, error: 'Green maxes out at 5 cards' } if numbers.length >= 5
+      return { valid: false, error: 'Green maxes out at 6 cards' } if numbers.length >= 6
     when 'yellow'
-      # CHANGED: Multiples - play same number repeatedly (5,5,5,5)
-      # High risk (need multiple copies) but high reward (can get 4+ cards)
+      # Ascending by 1s (1,2,3,4...) - creates strategic sequencing decisions
       if numbers.any?
-        return { valid: false, error: 'Yellow must play the same number' } unless new_num == numbers.last
+        return { valid: false, error: 'Yellow must ascend by exactly 1' } unless new_num == numbers.last + 1
       end
-      # Limit to prevent abuse
-      return { valid: false, error: 'Yellow maxes out at 4 cards' } if numbers.length >= 4
+      return { valid: false, error: 'Yellow maxes out at 8 cards' } if numbers.length >= 8
     when 'purple'
-      # CHANGED: Descending by ANY amount (easier to build)
+      # Descending by ANY amount (easier to build, no cap for balance)
       return { valid: false, error: 'Purple must descend' } unless new_num < numbers.last
     end
 
     { valid: true }
+  end
+
+  def discard_and_draw(card_index, player_type = 'player')
+    hand = player_type == 'player' ? player_hand : ai_hand
+    return { success: false, error: 'Invalid card' } unless hand[card_index]
+    return { success: false, error: 'Deck is empty' } if game_state['deck'].empty?
+
+    # Discard the card
+    hand.delete_at(card_index)
+
+    # Draw a new card
+    drawn = draw_card
+    if drawn
+      hand << drawn
+      # Reset consecutive passes since player took an action
+      game_state['consecutive_passes'] = 0
+      save
+      { success: true, card: drawn }
+    else
+      { success: false, error: 'Could not draw card' }
+    end
   end
 
   def end_turn
@@ -213,11 +236,11 @@ class Game < ApplicationRecord
     end
 
     # Check if round is over
-    # Round ends when: hands are empty, deck is empty, OR both players have passed twice in a row (stuck)
+    # Round ends when: hands are empty, deck is empty, OR both players have passed 3 times in a row (stuck)
     game_state['consecutive_passes'] ||= 0
     game_state['consecutive_passes'] += 1
 
-    if player_hand.empty? || ai_hand.empty? || game_state['deck'].empty? || game_state['consecutive_passes'] >= 4
+    if player_hand.empty? || ai_hand.empty? || game_state['deck'].empty? || game_state['consecutive_passes'] >= 6
       end_round
     end
 
@@ -331,11 +354,11 @@ class Game < ApplicationRecord
   end
 
   def calculate_combo_multiplier(path_count)
-    # Reward playing multiple colors with multipliers
+    # Reward playing multiple colors, but balanced to not dominate path length strategy
     # 1 path = 1.0x (base)
     # 2 paths = 1.2x (+20%)
-    # 3 paths = 1.5x (+50%)
-    # 4 paths = 1.8x (+80%)
+    # 3 paths = 1.4x (+40%)
+    # 4 paths = 1.7x (+70%)
     # 5 paths = 2.0x (+100%) - RAINBOW BONUS!
     case path_count
     when 0, 1
@@ -343,9 +366,9 @@ class Game < ApplicationRecord
     when 2
       1.2
     when 3
-      1.5
+      1.4
     when 4
-      1.8
+      1.7
     when 5
       2.0  # Rainbow bonus!
     else

@@ -11,7 +11,7 @@
   end
 %>
 
-<div class="relative group">
+<div class="relative group flex flex-col items-center gap-2">
   <%= form_with url: play_card_game_path(game), method: :post, local: true, class: "contents" do |f| %>
     <%= f.hidden_field :card_index, value: index %>
     <%= f.hidden_field :color, value: card['color'] %>
@@ -29,11 +29,19 @@
     </button>
   <% end %>
 
+  <!-- Discard button -->
+  <%= form_with url: discard_card_game_path(game), method: :post, local: true, class: "contents" do |f| %>
+    <%= f.hidden_field :card_index, value: index %>
+    <button type="submit" class="text-xs px-2 py-1 bg-gray-300 hover:bg-gray-400 rounded text-gray-700 opacity-50 hover:opacity-100 transition-opacity">
+      Discard
+    </button>
+  <% end %>
+
   <!-- Tooltip on hover -->
   <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
     <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-xl">
       <% if is_new_path %>
-        Click to start <%= card['color'] %> path (costs 3 cards)
+        Click to start <%= card['color'] %> path (costs 2 cards)
       <% else %>
         Click to add to your <%= card['color'] %> path
       <% end %>

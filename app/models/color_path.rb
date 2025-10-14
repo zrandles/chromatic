@@ -19,37 +19,43 @@ class ColorPath < ApplicationRecord
 
     case color
     when 'red'
-      # Must ascend with jumps of 2+
-      "Next: #{last_number + 2}+ (jump by 2 or more)"
+      # Must ascend with jumps of 2+, max 8 cards
+      if card_array.length >= 8
+        "COMPLETE (8 cards max)"
+      else
+        "Next: #{last_number + 2}+ (jump by 2+, #{8 - card_array.length} left)"
+      end
     when 'blue'
-      # Pairs only
-      if card_array.length.odd?
-        "Next: #{last_number} (complete the pair)"
+      # Pairs with flexibility
+      if card_array.length >= 10
+        "COMPLETE (10 cards max)"
+      elsif card_array.length.odd?
+        "Next: #{last_number} (pair) OR #{last_number - 1}/#{last_number + 1} (extend)"
       else
         prev_pair = card_array.length >= 2 ? card_array[-2]['number'] : nil
         if prev_pair
-          "Next: Any number except #{prev_pair} (start new pair)"
+          "Next: Any except #{prev_pair} (#{10 - card_array.length} left)"
         else
-          "Next: Any number (start new pair)"
+          "Next: Any number (#{10 - card_array.length} left)"
         end
       end
     when 'green'
-      # Consecutive but max 5
-      if card_array.length >= 5
-        "COMPLETE (5 cards max)"
+      # Consecutive but max 6
+      if card_array.length >= 6
+        "COMPLETE (6 cards max)"
       else
-        "Next: #{last_number - 1} or #{last_number + 1} (#{5 - card_array.length} left)"
+        "Next: #{last_number - 1} or #{last_number + 1} (#{6 - card_array.length} left)"
       end
     when 'yellow'
-      # Multiples (same number)
-      if card_array.length >= 4
-        "COMPLETE (4 cards max)"
+      # Ascending by 1s (1,2,3,4...)
+      if card_array.length >= 8
+        "COMPLETE (8 cards max)"
       else
-        "Next: #{last_number} only (#{4 - card_array.length} more copies)"
+        "Next: #{last_number + 1} only (#{8 - card_array.length} left)"
       end
     when 'purple'
-      # Any descending
-      "Next: 1-#{last_number - 1} (any lower number)"
+      # Any descending (no cap)
+      "Next: 1-#{last_number - 1} (any lower number, no cap!)"
     end
   end
 end
