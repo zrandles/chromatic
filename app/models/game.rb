@@ -80,6 +80,9 @@ class Game < ApplicationRecord
     card = hand[card_index]
     return { success: false, error: 'Invalid card' } unless card
 
+    # Reset consecutive passes when a card is successfully played
+    game_state['consecutive_passes'] = 0
+
     # Check if starting a new path
     path = color_paths.find_by(color: color, player_type: player_type)
 
@@ -209,8 +212,12 @@ class Game < ApplicationRecord
       game_state['turn'] = 'ai'
     end
 
-    # Check if round is over (both players out of cards or deck empty)
-    if player_hand.empty? || ai_hand.empty? || game_state['deck'].empty?
+    # Check if round is over
+    # Round ends when: hands are empty, deck is empty, OR both players have passed twice in a row (stuck)
+    game_state['consecutive_passes'] ||= 0
+    game_state['consecutive_passes'] += 1
+
+    if player_hand.empty? || ai_hand.empty? || game_state['deck'].empty? || game_state['consecutive_passes'] >= 4
       end_round
     end
 
