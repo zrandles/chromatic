@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby
+
+# Screenshot utility for UX analysis
+# Wraps lib/screenshot.js for easy command-line usage
+#
+# Usage:
+#   bin/screenshot <path>                          # Screenshots localhost:3000/<path>
+#   bin/screenshot <path> --width 375              # Mobile viewport
+#   bin/screenshot <path> --output /tmp/custom.png # Custom output path
+#
+# Examples:
+#   bin/screenshot /chromatic
+#   bin/screenshot /chromatic --width 375 --height 667  # iPhone SE size
+#   bin/screenshot /chromatic/games/1
+
+require 'optparse'
+require 'fileutils'
+
+options = {
+  port: 3000,
+  width: 1280,
+  height: 800,
+  output: nil
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: bin/screenshot <path> [options]"
+
+  opts.on("--port PORT", Integer, "Port for localhost (default: 3000)") do |v|
+    options[:port] = v
+  end
+
+  opts.on("--width WIDTH", Integer, "Viewport width (default: 1280)") do |v|
+    options[:width] = v
+  end
+
+  opts.on("--height HEIGHT", Integer, "Viewport height (default: 800)") do |v|
+    options[:height] = v
+  end
+
+  opts.on("--output PATH", "Output path (default: /tmp/<sanitized_path>.png)") do |v|
+    options[:output] = v
+  end
+
+  opts.on("--url URL", "Full URL instead of localhost path") do |v|
+    options[:url] = v
+  end
+
+  opts.on("-h", "--help", "Show this help message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Get path from arguments
+path = ARGV[0]
+
+if path.nil? && options[:url].nil?
+  puts "Error: Must provide either a path or --url"
+  puts "Usage: bin/screenshot <path> [options]"
+  puts "       bin/screenshot --url <full_url> [options]"
+  exit 1
+end
+
+# Build URL
+url = if options[:url]
+  options[:url]
+else
+  path = "/#{path}" unless path.start_with?('/')
+  "http://localhost:#{options[:port]}#{path}"
+end
+
+# Build output path
+output = if options[:output]
+  options[:output]
+else
+  sanitized = path.gsub(/[^a-zA-Z0-9_-]/, '_')
+  viewport_suffix = options[:width] == 1280 ? "" : "_#{options[:width]}x#{options[:height]}"
+  "/tmp/chromatic#{sanitized}#{viewport_suffix}.png"
+end
+
+# Ensure output directory exists
+FileUtils.mkdir_p(File.dirname(output))
+
+# Run the screenshot script via node
+script_path = File.expand_path('../lib/screenshot.js', __dir__)
+
+# Check if node_modules/puppeteer exists, if not install it
+puppeteer_path = File.expand_path('../node_modules/puppeteer', __dir__)
+unless Dir.exist?(puppeteer_path)
+  puts "📦 Installing Puppeteer (one-time setup)..."
+  Dir.chdir(File.dirname(__dir__)) do
+    system("npm install --silent puppeteer") || abort("Failed to install Puppeteer")
+  end
+  puts
+end
+
+cmd = "node #{script_path} '#{url}' '#{output}' #{options[:width]} #{options[:height]}"
+
+puts "🔍 Taking screenshot..."
+puts "   URL: #{url}"
+puts "   Viewport: #{options[:width]}x#{options[:height]}"
+puts "   Output: #{output}"
+puts
+
+system(cmd)
+
+if $?.success?
+  puts
+  puts "✅ Screenshot ready: #{output}"
+  puts
+  puts "To view in Claude Code, use: Read tool with file_path: #{output}"
+else
+  puts
+  puts "❌ Screenshot failed"
+  exit 1
+end
