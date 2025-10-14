@@ -16,13 +16,14 @@
     <%= f.hidden_field :card_index, value: index %>
     <%= f.hidden_field :color, value: card['color'] %>
 
-    <button type="submit" class="w-24 h-32 rounded-xl shadow-md border-3 flex flex-col items-center justify-center bg-white hover:shadow-2xl hover:-translate-y-1 transition-all duration-150 cursor-pointer <%= card_color_class %>">
-      <div class="text-5xl font-bold"><%= card['number'] %></div>
-      <div class="text-xs uppercase font-semibold mt-2 tracking-wide"><%= card['color'] %></div>
+    <button type="submit" class="w-28 h-40 rounded-2xl shadow-lg border-4 flex flex-col items-center justify-center bg-gradient-to-br from-white to-gray-50 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 transition-all duration-200 cursor-pointer <%= card_color_class %> active:scale-95">
+      <div class="text-6xl font-black mb-1"><%= card['number'] %></div>
+      <div class="text-sm uppercase font-bold tracking-wider"><%= card['color'] %></div>
+      <div class="text-xs mt-1 opacity-60">Click to play</div>
 
       <% if is_new_path %>
-        <div class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white">
-          -3💳
+        <div class="absolute -top-3 -right-3 bg-orange-600 text-white text-sm font-black px-3 py-1.5 rounded-full shadow-xl border-3 border-white animate-pulse">
+          -2💳
         </div>
       <% end %>
     </button>
