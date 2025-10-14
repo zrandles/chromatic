@@ -251,14 +251,9 @@
   <!-- Your Hand -->
   <% if @game.status == 'active' %>
     <div class="mt-8 bg-gradient-to-b from-gray-50 to-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center mb-4 gap-4">
         <h2 class="text-2xl font-bold text-gray-800">🃏 Your Hand (<%= @game.player_hand.length %> cards)</h2>
-        <div class="flex gap-3">
-          <div class="text-sm bg-blue-50 border-2 border-blue-400 rounded-lg px-3 py-2 font-medium text-blue-900">
-            💡 <strong>Tip:</strong> Starting paths costs 2 cards now!
-          </div>
-          <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, class: "px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold transition-colors" %>
-        </div>
+        <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, class: "px-8 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-bold transition-colors text-lg whitespace-nowrap" %>
       </div>
 
       <div class="flex flex-wrap gap-4 mb-4">
