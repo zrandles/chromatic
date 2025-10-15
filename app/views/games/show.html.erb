@@ -121,6 +121,7 @@
       <%= button_to "Continue to Round #{@game.current_round + 1}",
                     continue_round_game_path(@game),
                     method: :post,
+                    data: { turbo: false },
                     class: "mt-4 px-10 py-4 bg-blue-600 text-white text-2xl rounded-lg hover:bg-blue-700 font-bold shadow-lg" %>
     </div>
   <% end %>
@@ -261,7 +262,7 @@
 
       <!-- End Turn Button - Prominent placement -->
       <div class="mt-6 flex justify-center">
-        <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, class: "px-12 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-colors text-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95" %>
+        <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, data: { turbo: false }, class: "px-12 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-colors text-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95" %>
       </div>
 
       <!-- Exponential scoring explainer -->
