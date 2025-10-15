@@ -166,103 +166,138 @@
     </div>
   <% end %>
 
-  <!-- Color Rules Reference - Collapsible -->
-  <details class="mb-6 bg-white rounded-xl border-2 border-gray-300 shadow-sm">
-    <summary class="cursor-pointer p-4 font-bold text-lg hover:bg-gray-50 rounded-xl transition-colors select-none">
-      📚 Color Rules Reference (click to expand)
-    </summary>
-    <div class="p-4 pt-2 border-t border-gray-200">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-        <div class="bg-red-50 p-3 rounded-lg border-2 border-red-300">
-          <div class="font-bold text-red-700 mb-1 text-lg">🔴 Red</div>
-          <div class="text-sm text-gray-800 font-semibold">Jump by 2+</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 2→5→9→15</div>
-          <div class="text-xs text-gray-500 mt-1">Max: 10 cards</div>
+  <!-- Main Layout: Sidebar + Game Area -->
+  <div class="flex flex-col lg:flex-row gap-4 mb-6">
+    <!-- Color Rules Sidebar - Always Visible on Desktop, Collapsible on Mobile -->
+    <div id="rules-sidebar" class="lg:w-72 flex-shrink-0">
+      <div class="bg-gradient-to-br from-white to-gray-50 rounded-lg border-2 border-gray-300 shadow-md sticky top-4">
+        <div class="px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white flex justify-between items-center rounded-t-md cursor-pointer lg:cursor-default"
+             onclick="if(window.innerWidth < 1024) { document.getElementById('rules-content').classList.toggle('hidden'); document.getElementById('toggle-arrow').classList.toggle('rotate-180'); }">
+          <h3 class="font-bold text-sm flex items-center gap-1">
+            <span>📚</span>
+            <span>Quick Reference</span>
+            <span id="toggle-arrow" class="lg:hidden transition-transform">▼</span>
+          </h3>
+          <button
+            onclick="event.stopPropagation(); document.getElementById('rules-sidebar').classList.add('hidden'); document.getElementById('show-rules-btn').classList.remove('hidden')"
+            class="hidden lg:block text-white hover:text-gray-200 text-xs px-2 py-0.5 rounded hover:bg-white/20 transition"
+            title="Hide rules">
+            ✕
+          </button>
         </div>
-        <div class="bg-blue-50 p-3 rounded-lg border-2 border-blue-300">
-          <div class="font-bold text-blue-700 mb-1 text-lg">🔵 Blue</div>
-          <div class="text-sm text-gray-800 font-semibold">Loose pairing (±3)</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 7→9→11→8</div>
-          <div class="text-xs text-gray-500 mt-1">Easier now!</div>
-        </div>
-        <div class="bg-green-50 p-3 rounded-lg border-2 border-green-300">
-          <div class="font-bold text-green-700 mb-1 text-lg">🟢 Green</div>
-          <div class="text-sm text-gray-800 font-semibold">Consecutive (max 5)</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 8→9→10→11→12</div>
-          <div class="text-xs text-gray-500 mt-1">Capped at 5!</div>
-        </div>
-        <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-300">
-          <div class="font-bold text-yellow-700 mb-1 text-lg">🟡 Yellow</div>
-          <div class="text-sm text-gray-800 font-semibold">Ascend by 1-3</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 2→3→6→8→10</div>
-          <div class="text-xs text-gray-500 mt-1">Flexible sequence!</div>
-        </div>
-        <div class="bg-purple-50 p-3 rounded-lg border-2 border-purple-300">
-          <div class="font-bold text-purple-700 mb-1 text-lg">🟣 Purple</div>
-          <div class="text-sm text-gray-800 font-semibold">Any descending</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 20→17→10→3</div>
-          <div class="text-xs text-gray-500 mt-1">Easier now!</div>
-        </div>
-      </div>
 
-      <!-- Combo Multiplier System (Updated Proposal 4) -->
-      <div class="mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-          <div class="text-2xl">🌈</div>
-          <div>
-            <div class="font-bold text-yellow-900 mb-1">COMBO SYSTEM: Multiple Paths = Multiplier Bonus!</div>
-            <div class="flex gap-4 text-xs text-gray-800">
-              <span>1 path = <strong>1.0x</strong></span>
-              <span>2 paths = <strong class="text-blue-700">1.1x</strong></span>
-              <span>3 paths = <strong class="text-green-700">1.25x</strong></span>
-              <span>4 paths = <strong class="text-purple-700">1.4x</strong></span>
-              <span class="text-orange-700 font-bold">5 paths = <strong>1.6x RAINBOW!</strong></span>
+        <div id="rules-content" class="p-3 space-y-2.5 max-h-[75vh] overflow-y-auto">
+          <!-- Compact Color Rules -->
+          <div class="space-y-1.5">
+            <div class="bg-red-50 px-2 py-1.5 rounded border-l-4 border-red-500 hover:bg-red-100 transition">
+              <div class="font-bold text-red-700 text-xs flex items-center gap-1">
+                <span>🔴</span>
+                <span>Red: Jump +2</span>
+              </div>
+              <div class="text-xs text-gray-600 ml-4">2→5→9 (max 10)</div>
             </div>
-            <div class="text-xs text-gray-600 mt-1">Strategy: Balance multiple paths vs. longer paths!</div>
+            <div class="bg-blue-50 px-2 py-1.5 rounded border-l-4 border-blue-500 hover:bg-blue-100 transition">
+              <div class="font-bold text-blue-700 text-xs flex items-center gap-1">
+                <span>🔵</span>
+                <span>Blue: Pairs ±3</span>
+              </div>
+              <div class="text-xs text-gray-600 ml-4">7→9→11→8 (max 10)</div>
+            </div>
+            <div class="bg-green-50 px-2 py-1.5 rounded border-l-4 border-green-500 hover:bg-green-100 transition">
+              <div class="font-bold text-green-700 text-xs flex items-center gap-1">
+                <span>🟢</span>
+                <span>Green: Consecutive</span>
+              </div>
+              <div class="text-xs text-gray-600 ml-4">8→9→10 (max 5)</div>
+            </div>
+            <div class="bg-yellow-50 px-2 py-1.5 rounded border-l-4 border-yellow-500 hover:bg-yellow-100 transition">
+              <div class="font-bold text-yellow-700 text-xs flex items-center gap-1">
+                <span>🟡</span>
+                <span>Yellow: +1 to 3</span>
+              </div>
+              <div class="text-xs text-gray-600 ml-4">2→3→6→8 (max 10)</div>
+            </div>
+            <div class="bg-purple-50 px-2 py-1.5 rounded border-l-4 border-purple-500 hover:bg-purple-100 transition">
+              <div class="font-bold text-purple-700 text-xs flex items-center gap-1">
+                <span>🟣</span>
+                <span>Purple: Descend</span>
+              </div>
+              <div class="text-xs text-gray-600 ml-4">20→17→10 (max 10)</div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Long Path Bonuses (New in Proposal 4) -->
-      <div class="mt-3 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-400 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-          <div class="text-2xl">⭐</div>
-          <div>
-            <div class="font-bold text-purple-900 mb-1">LONG PATH BONUS: Extend paths for extra points!</div>
-            <div class="flex gap-4 text-xs text-gray-800">
-              <span>5+ cards = <strong class="text-green-700">+5 pts</strong></span>
-              <span>7+ cards = <strong class="text-blue-700">+10 pts</strong></span>
-              <span>10+ cards = <strong class="text-purple-700">+20 pts</strong></span>
+          <!-- Divider -->
+          <div class="border-t-2 border-gray-200"></div>
+
+          <!-- Scoring Systems - Ultra Compact -->
+          <div class="space-y-1.5">
+            <div class="bg-purple-50 px-2 py-1.5 rounded border-l-2 border-purple-400">
+              <div class="font-bold text-purple-900 text-xs mb-0.5 flex items-center gap-1">
+                <span>📈</span>
+                <span>Base Score: (cards)²</span>
+              </div>
+              <div class="text-xs text-gray-700 ml-4 leading-tight">
+                3 cards = 9pts, 5 = 25pts
+              </div>
             </div>
-            <div class="text-xs text-gray-600 mt-1">Long paths now worth even more!</div>
+
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 px-2 py-1.5 rounded border-l-2 border-yellow-500">
+              <div class="font-bold text-yellow-900 text-xs mb-0.5 flex items-center gap-1">
+                <span>🌈</span>
+                <span>Combo Multiplier</span>
+              </div>
+              <div class="text-xs text-gray-700 ml-4 leading-tight">
+                2→1.1x | 3→1.25x | 5→1.6x
+              </div>
+            </div>
+
+            <div class="bg-pink-50 px-2 py-1.5 rounded border-l-2 border-pink-400">
+              <div class="font-bold text-pink-900 text-xs mb-0.5 flex items-center gap-1">
+                <span>⭐</span>
+                <span>Long Path Bonus</span>
+              </div>
+              <div class="text-xs text-gray-700 ml-4 leading-tight">
+                5→+5 | 7→+10 | 10→+20
+              </div>
+            </div>
+
+            <div class="bg-blue-50 px-2 py-1.5 rounded border-l-2 border-blue-400">
+              <div class="font-bold text-blue-900 text-xs mb-0.5 flex items-center gap-1">
+                <span>💰</span>
+                <span>Path Costs</span>
+              </div>
+              <div class="text-xs text-gray-700 ml-4 leading-tight">
+                1st FREE | 2nd: 1 | 3rd-5th: 2-4
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Dynamic Starting Costs (New in Proposal 1) -->
-      <div class="mt-3 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-          <div class="text-2xl">💰</div>
-          <div>
-            <div class="font-bold text-blue-900 mb-1">PATH COSTS: First path is free, costs increase!</div>
-            <div class="flex gap-4 text-xs text-gray-800">
-              <span>1st path = <strong class="text-green-700">FREE</strong></span>
-              <span>2nd path = <strong>1 card</strong></span>
-              <span>3rd path = <strong>2 cards</strong></span>
-              <span>4th path = <strong>3 cards</strong></span>
-              <span>5th path = <strong class="text-red-700">4 cards</strong></span>
+          <!-- Pro Tip -->
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-2 py-1.5 rounded border border-green-300">
+            <div class="text-xs font-semibold text-green-800 mb-0.5">💡 Strategy Tip</div>
+            <div class="text-xs text-gray-700 leading-tight">
+              Balance path length vs. combo multipliers for max points!
             </div>
-            <div class="text-xs text-gray-600 mt-1">Choose wisely: start new paths or extend existing ones?</div>
           </div>
         </div>
       </div>
     </div>
-  </details>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Player Side -->
-    <div>
-      <h2 class="text-2xl font-bold mb-4">Your Paths</h2>
+    <!-- Show Rules Button (when hidden) -->
+    <button
+      id="show-rules-btn"
+      onclick="document.getElementById('rules-sidebar').classList.remove('hidden'); this.classList.add('hidden')"
+      class="hidden fixed top-20 left-4 z-10 px-3 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 text-sm font-bold">
+      📚 Show Rules
+    </button>
+
+    <!-- Game Content Area -->
+    <div class="flex-1 min-w-0">
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Player Side -->
+        <div>
+          <h2 class="text-2xl font-bold mb-4">Your Paths</h2>
       <div class="space-y-3">
         <% if @game.player_paths.any? %>
           <% @game.player_paths.each do |path| %>
@@ -273,12 +308,12 @@
             No paths yet. <strong class="text-green-600">First path is FREE!</strong>
           </div>
         <% end %>
-      </div>
-    </div>
+          </div>
+        </div>
 
-    <!-- AI Side -->
-    <div>
-      <h2 class="text-2xl font-bold mb-4">AI Paths</h2>
+        <!-- AI Side -->
+        <div>
+          <h2 class="text-2xl font-bold mb-4">AI Paths</h2>
       <div class="space-y-3">
         <% if @game.ai_paths.any? %>
           <% @game.ai_paths.each do |path| %>
@@ -289,63 +324,54 @@
             AI hasn't played yet
           </div>
         <% end %>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Your Hand -->
+      <!-- Your Hand -->
   <% if @game.status == 'active' %>
-    <div class="mt-8 bg-gradient-to-b from-gray-50 to-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">🃏 Your Hand (<%= @game.player_hand.length %> cards)</h2>
+    <div class="mt-6 bg-gradient-to-b from-blue-50 to-white border-2 border-blue-300 rounded-lg p-4 shadow-md">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-bold text-gray-800">🃏 Your Hand (<%= @game.player_hand.length %>)</h2>
+        <div class="text-xs text-gray-600 italic">🎯 Match card colors to path colors</div>
+      </div>
 
-      <div class="flex flex-wrap gap-4 mb-4">
+      <div class="flex flex-wrap gap-3 mb-3">
         <% @game.player_hand.each_with_index do |card, index| %>
           <%= render partial: 'card', locals: { card: card, index: index, game: @game } %>
         <% end %>
       </div>
 
       <!-- End Turn Section - With Clear Status -->
-      <div class="mt-6 space-y-3">
+      <div class="mt-4 space-y-2">
         <% hand_size = @game.player_hand.length %>
         <% has_cards = hand_size > 0 %>
 
         <% if has_cards %>
           <!-- Warning: Still have cards -->
-          <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 text-center">
-            <div class="flex items-center justify-center gap-3 mb-2">
-              <span class="text-3xl">⚠️</span>
-              <div class="text-lg font-bold text-amber-900">You still have <%= hand_size %> <%= 'card'.pluralize(hand_size) %> in hand!</div>
+          <div class="bg-amber-50 border border-amber-400 rounded-lg p-3 text-center">
+            <div class="flex items-center justify-center gap-2 mb-1">
+              <span class="text-xl">⚠️</span>
+              <div class="text-sm font-bold text-amber-900">Still have <%= hand_size %> <%= 'card'.pluralize(hand_size) %>!</div>
             </div>
-            <div class="text-sm text-amber-800 mb-3">
-              <strong>Before ending your turn:</strong> Play cards to your paths or discard unwanted cards
-            </div>
-            <div class="flex gap-4 justify-center items-center text-xs text-amber-700">
-              <div class="flex items-center gap-1">
-                <span>✓</span>
-                <span>Click cards to play them</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <span>✓</span>
-                <span>Click "Discard" to remove cards</span>
-              </div>
+            <div class="text-xs text-amber-700">
+              Play or discard all cards before ending turn
             </div>
           </div>
 
-          <!-- Disabled End Turn Button with Explanation -->
-          <div class="relative flex justify-center">
-            <button
-              disabled
-              class="px-12 py-4 bg-gray-300 text-gray-500 rounded-xl font-bold text-2xl shadow-lg cursor-not-allowed opacity-60"
-              title="You must play or discard all cards before ending your turn">
-              End Turn → (Disabled)
-            </button>
-          </div>
+          <!-- Disabled End Turn Button -->
+          <button
+            disabled
+            class="w-full px-8 py-3 bg-gray-300 text-gray-500 rounded-lg font-bold text-lg cursor-not-allowed opacity-60"
+            title="You must play or discard all cards before ending your turn">
+            End Turn → (Play/Discard all cards first)
+          </button>
         <% else %>
           <!-- Ready to End Turn -->
-          <div class="bg-green-50 border-2 border-green-400 rounded-xl p-3 text-center">
+          <div class="bg-green-50 border border-green-400 rounded-lg p-2 text-center">
             <div class="flex items-center justify-center gap-2 text-green-800">
-              <span class="text-2xl">✓</span>
-              <span class="font-bold">Hand is empty - Ready to end turn!</span>
+              <span class="text-lg">✓</span>
+              <span class="font-bold text-sm">Ready to end turn!</span>
             </div>
           </div>
 
@@ -353,27 +379,11 @@
                         end_turn_game_path(@game),
                         method: :post,
                         data: { turbo: false, confirm: "End your turn? The AI will play next." },
-                        class: "w-full px-12 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold transition-all text-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95" %>
+                        class: "w-full px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-all text-lg shadow-lg hover:shadow-xl" %>
         <% end %>
-      </div>
-
-      <!-- Exponential scoring explainer -->
-      <div class="mt-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-          <div class="text-2xl">📈</div>
-          <div class="text-sm text-gray-800">
-            <div class="font-bold text-purple-900 mb-1">Scoring is exponential: (cards)²</div>
-            <div class="flex gap-4 text-xs">
-              <span>1 card = <strong>1 pt</strong></span>
-              <span>2 cards = <strong>4 pts</strong></span>
-              <span>3 cards = <strong>9 pts</strong></span>
-              <span>4 cards = <strong>16 pts</strong></span>
-              <span>5 cards = <strong>25 pts</strong></span>
-              <span class="text-purple-700 font-bold">→ Build longer paths!</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   <% end %>
+    </div>
+  </div>
 </div>
