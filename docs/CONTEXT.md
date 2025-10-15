@@ -154,9 +154,57 @@ ssh zac@24.199.71.69 'cd /home/zac/chromatic/current && RBENV_ROOT=$HOME/.rbenv 
 - [ ] Score prediction (show potential score before playing)
 - [ ] Color blindness mode (add patterns/symbols to colors)
 
+## Bug Fix Process
+
+<critical>
+**MANDATORY TESTING WORKFLOW** - Never skip these steps:
+
+1. **Start Local Server**
+   ```bash
+   cd /Users/zac/zac_ecosystem/apps/chromatic
+   bin/rails server -p 3002
+   ```
+
+2. **Reproduce Bug Locally**
+   - Visit http://localhost:3002/chromatic
+   - Perform the exact action that's broken
+   - Document what you see vs what should happen
+
+3. **Fix the Code**
+   - Make minimal, focused changes
+   - One bug per commit
+
+4. **Verify Fix Locally** ⚠️ CRITICAL STEP
+   - Refresh page in browser
+   - Test the EXACT action that was broken
+   - Test related functionality (don't break other things)
+   - **DO NOT COMMIT unless local test passes**
+
+5. **Commit Only After Local Verification**
+   ```bash
+   git add -A && git commit -m "Fix: [specific issue verified locally]"
+   git push
+   ```
+
+6. **Deploy to Production**
+   ```bash
+   cap production deploy
+   ```
+
+7. **Verify on Production**
+   - Visit http://24.199.71.69/chromatic
+   - Test the same action again
+   - If it doesn't work, rollback or fix immediately
+
+8. **Update Documentation**
+   - Add to "Recent Bug Fixes" section below
+   - Remove from "Known Issues" section
+   - Update "Last Updated" timestamp
+</critical>
+
 ## Known Issues
 
-None currently! Game is playable and working in production.
+- **End Turn button doesn't work** - Button exists in UI but action may not be triggering (reported 2025-10-14)
 
 ## Recent Bug Fixes
 
