@@ -260,9 +260,57 @@
         <% end %>
       </div>
 
-      <!-- End Turn Button - Prominent placement -->
-      <div class="mt-6 flex justify-center">
-        <%= button_to "End Turn →", end_turn_game_path(@game), method: :post, data: { turbo: false }, class: "px-12 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-colors text-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95" %>
+      <!-- End Turn Section - With Clear Status -->
+      <div class="mt-6 space-y-3">
+        <% hand_size = @game.player_hand.length %>
+        <% has_cards = hand_size > 0 %>
+
+        <% if has_cards %>
+          <!-- Warning: Still have cards -->
+          <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 text-center">
+            <div class="flex items-center justify-center gap-3 mb-2">
+              <span class="text-3xl">⚠️</span>
+              <div class="text-lg font-bold text-amber-900">You still have <%= hand_size %> <%= 'card'.pluralize(hand_size) %> in hand!</div>
+            </div>
+            <div class="text-sm text-amber-800 mb-3">
+              <strong>Before ending your turn:</strong> Play cards to your paths or discard unwanted cards
+            </div>
+            <div class="flex gap-4 justify-center items-center text-xs text-amber-700">
+              <div class="flex items-center gap-1">
+                <span>✓</span>
+                <span>Click cards to play them</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span>✓</span>
+                <span>Click "Discard" to remove cards</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disabled End Turn Button with Explanation -->
+          <div class="relative flex justify-center">
+            <button
+              disabled
+              class="px-12 py-4 bg-gray-300 text-gray-500 rounded-xl font-bold text-2xl shadow-lg cursor-not-allowed opacity-60"
+              title="You must play or discard all cards before ending your turn">
+              End Turn → (Disabled)
+            </button>
+          </div>
+        <% else %>
+          <!-- Ready to End Turn -->
+          <div class="bg-green-50 border-2 border-green-400 rounded-xl p-3 text-center">
+            <div class="flex items-center justify-center gap-2 text-green-800">
+              <span class="text-2xl">✓</span>
+              <span class="font-bold">Hand is empty - Ready to end turn!</span>
+            </div>
+          </div>
+
+          <%= button_to "End Turn →",
+                        end_turn_game_path(@game),
+                        method: :post,
+                        data: { turbo: false, confirm: "End your turn? The AI will play next." },
+                        class: "w-full px-12 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold transition-all text-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95" %>
+        <% end %>
       </div>
 
       <!-- Exponential scoring explainer -->

@@ -29,11 +29,11 @@
     </button>
   <% end %>
 
-  <!-- Discard button -->
+  <!-- Discard button - More visible -->
   <%= form_with url: discard_card_game_path(game), method: :post, local: true, class: "contents" do |f| %>
     <%= f.hidden_field :card_index, value: index %>
-    <button type="submit" class="text-xs px-2 py-1 bg-gray-300 hover:bg-gray-400 rounded text-gray-700 opacity-50 hover:opacity-100 transition-opacity">
-      Discard
+    <button type="submit" class="text-sm px-3 py-1.5 bg-red-500 hover:bg-red-600 active:bg-red-700 rounded-md text-white font-semibold shadow-sm hover:shadow-md transition-all">
+      🗑️ Discard
     </button>
   <% end %>
 
