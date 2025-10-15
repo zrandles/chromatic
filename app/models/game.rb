@@ -7,7 +7,17 @@ class Game < ApplicationRecord
   TOTAL_ROUNDS = 10
   HAND_SIZE = 10 # Increased to allow multiple paths + extensions
   DECK_SIZE = 20 # 1-20 for each color
-  START_PATH_COST = 2 # cards (1 played + 1 discarded)
+
+  # Dynamic starting costs (Proposal 1)
+  # 1st path: FREE, 2nd: 1 card, 3rd: 2 cards, 4th: 3 cards, 5th: 4 cards
+  def starting_cost_for_path_number(path_count)
+    return 0 if path_count == 0  # First path is free!
+    return 1 if path_count == 1
+    return 2 if path_count == 2
+    return 3 if path_count == 3
+    return 4 if path_count >= 4
+    path_count  # fallback
+  end
 
   after_initialize :setup_new_game, if: :new_record?
 
@@ -92,14 +102,17 @@ class Game < ApplicationRecord
         return { success: false, error: "Card color must match path color. This #{card['color']} card cannot start a #{color} path." }
       end
 
-      # Starting new path costs START_PATH_COST cards
-      if hand.length < START_PATH_COST
-        return { success: false, error: "Need #{START_PATH_COST} cards to start a path" }
+      # Dynamic starting cost based on number of existing paths (Proposal 1)
+      current_path_count = color_paths.where(player_type: player_type).count
+      start_cost = starting_cost_for_path_number(current_path_count)
+
+      if hand.length < start_cost + 1  # +1 for the card being played
+        return { success: false, error: "Need #{start_cost + 1} cards to start path ##{current_path_count + 1}" }
       end
 
-      # Discard additional cards (total START_PATH_COST)
+      # Discard additional cards (total start_cost, not including played card)
       cards_to_discard = [card_index]
-      (START_PATH_COST - 1).times do
+      start_cost.times do
         idx = (0...hand.length).to_a.reject { |i| cards_to_discard.include?(i) }.sample
         cards_to_discard << idx
       end
@@ -173,18 +186,16 @@ class Game < ApplicationRecord
       return { valid: false, error: 'Red must jump by at least 2' } if new_num - numbers.last < 2
       return { valid: false, error: 'Red maxes out at 8 cards' } if numbers.length >= 8
     when 'blue'
-      # Pairs with flexibility: complete pairs, then can extend or start new pair
-      # Strategic: save pairs, decide between longer paths vs starting new colors
+      # RELAXED BLUE RULE (Proposal 3): Every 2nd card must be within ±3 of previous card
+      # This creates "loose pairing" - feels like grouping numbers but achievable
+      # Example: 7→9 (pair-ish), 9→11 (pair-ish), 11→8 (pair-ish)
       if numbers.length.odd?
-        # Must complete the pair OR extend if last pair is complete (consecutive to last number)
-        is_matching_pair = new_num == numbers.last
-        is_consecutive = (new_num - numbers.last).abs == 1
-        return { valid: false, error: 'Blue must complete pair or extend consecutively' } unless is_matching_pair || is_consecutive
+        # Odd card: Must be within ±3 of last card (pairing mechanic)
+        distance = (new_num - numbers.last).abs
+        return { valid: false, error: 'Blue must be within ±3 of previous card (loose pairing)' } unless distance <= 3 && distance >= 0
       else
-        # Starting new pair: can play any number except same as last pair's first card
-        if numbers.length >= 2
-          return { valid: false, error: 'Blue cannot repeat the previous pair' } if new_num == numbers[-2]
-        end
+        # Even card: Can be any number (starting new "pair")
+        # No restriction - gives flexibility
       end
       return { valid: false, error: 'Blue maxes out at 10 cards' } if numbers.length >= 10
     when 'green'
@@ -192,9 +203,13 @@ class Game < ApplicationRecord
       return { valid: false, error: 'Green must be consecutive' } unless (new_num - numbers.last).abs == 1
       return { valid: false, error: 'Green maxes out at 6 cards' } if numbers.length >= 6
     when 'yellow'
-      # Ascending by 1s (1,2,3,4...) - creates strategic sequencing decisions
+      # RELAXED YELLOW RULE (Proposal 3): Must ascend, but by 1-3 (flexible sequence)
+      # Example: 2→3 (+1), 3→6 (+3), 6→8 (+2), 8→10 (+2)
+      # Still feels like building upward, but achievable
       if numbers.any?
-        return { valid: false, error: 'Yellow must ascend by exactly 1' } unless new_num == numbers.last + 1
+        jump = new_num - numbers.last
+        return { valid: false, error: 'Yellow must ascend' } unless jump > 0
+        return { valid: false, error: 'Yellow must ascend by 1-3' } unless jump >= 1 && jump <= 3
       end
       return { valid: false, error: 'Yellow maxes out at 8 cards' } if numbers.length >= 8
     when 'purple'
@@ -314,6 +329,10 @@ class Game < ApplicationRecord
     player_base_score = player_paths.sum(:score)
     ai_base_score = ai_paths.sum(:score)
 
+    # Calculate long path bonuses (Proposal 4)
+    player_bonus = player_paths.sum { |path| calculate_long_path_bonus(path.cards.length) }
+    ai_bonus = ai_paths.sum { |path| calculate_long_path_bonus(path.cards.length) }
+
     # Apply combo multipliers based on number of paths completed
     player_path_count = player_paths.count
     ai_path_count = ai_paths.count
@@ -321,8 +340,9 @@ class Game < ApplicationRecord
     player_multiplier = calculate_combo_multiplier(player_path_count)
     ai_multiplier = calculate_combo_multiplier(ai_path_count)
 
-    round_player_score = (player_base_score * player_multiplier).to_i
-    round_ai_score = (ai_base_score * ai_multiplier).to_i
+    # Total score = (base + bonus) * multiplier
+    round_player_score = ((player_base_score + player_bonus) * player_multiplier).to_i
+    round_ai_score = ((ai_base_score + ai_bonus) * ai_multiplier).to_i
 
     # Store round summary in game_state
     game_state['round_summary'] = {
@@ -331,6 +351,8 @@ class Game < ApplicationRecord
       'ai_round_score' => round_ai_score,
       'player_base_score' => player_base_score,
       'ai_base_score' => ai_base_score,
+      'player_bonus' => player_bonus,  # NEW: Long path bonuses
+      'ai_bonus' => ai_bonus,          # NEW: Long path bonuses
       'player_multiplier' => player_multiplier,
       'ai_multiplier' => ai_multiplier,
       'player_path_count' => player_path_count,
@@ -354,26 +376,32 @@ class Game < ApplicationRecord
   end
 
   def calculate_combo_multiplier(path_count)
-    # Reward playing multiple colors, but balanced to not dominate path length strategy
-    # 1 path = 1.0x (base)
-    # 2 paths = 1.2x (+20%)
-    # 3 paths = 1.4x (+40%)
-    # 4 paths = 1.7x (+70%)
-    # 5 paths = 2.0x (+100%) - RAINBOW BONUS!
+    # REDUCED MULTIPLIERS (Proposal 4) - Balance starting vs. extending paths
+    # Old: 1.0x, 1.2x, 1.4x, 1.7x, 2.0x (rainbow too strong)
+    # New: 1.0x, 1.1x, 1.25x, 1.4x, 1.6x (still rewards diversity, but doesn't dominate)
     case path_count
     when 0, 1
       1.0
     when 2
-      1.2
+      1.1   # Reduced from 1.2x
     when 3
-      1.4
+      1.25  # Reduced from 1.4x
     when 4
-      1.7
+      1.4   # Reduced from 1.7x
     when 5
-      2.0  # Rainbow bonus!
+      1.6   # Reduced from 2.0x - still special, but not overwhelming
     else
-      2.0
+      1.6
     end
+  end
+
+  def calculate_long_path_bonus(path_length)
+    # LONG PATH BONUS (Proposal 4) - Reward extending paths
+    # 5+ cards: +5 pts, 7+ cards: +10 pts, 10+ cards: +20 pts
+    return 20 if path_length >= 10
+    return 10 if path_length >= 7
+    return 5 if path_length >= 5
+    0
   end
 
   def continue_to_next_round

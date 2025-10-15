@@ -81,9 +81,14 @@
           <div class="text-sm text-gray-600 mb-2">
             <%= summary['player_path_count'] %> <%= 'path'.pluralize(summary['player_path_count']) %> × <%= summary['player_multiplier'] %>x multiplier
           </div>
+          <% if summary['player_bonus'] && summary['player_bonus'] > 0 %>
+            <div class="text-xs text-purple-700 font-bold mb-1">
+              ⭐ Long Path Bonus: +<%= summary['player_bonus'] %> pts
+            </div>
+          <% end %>
           <% if summary['player_multiplier'] > 1.0 %>
             <div class="text-xs text-green-700 font-bold mb-2">
-              🌈 COMBO! <%= summary['player_base_score'] %> base → <%= summary['player_round_score'] %> final
+              🌈 COMBO! (<%= summary['player_base_score'] %> base + <%= summary['player_bonus'] || 0 %> bonus) × <%= summary['player_multiplier'] %>x = <%= summary['player_round_score'] %>
             </div>
           <% end %>
           <div class="text-sm text-gray-600">this round</div>
@@ -98,9 +103,14 @@
           <div class="text-sm text-gray-600 mb-2">
             <%= summary['ai_path_count'] %> <%= 'path'.pluralize(summary['ai_path_count']) %> × <%= summary['ai_multiplier'] %>x multiplier
           </div>
+          <% if summary['ai_bonus'] && summary['ai_bonus'] > 0 %>
+            <div class="text-xs text-purple-700 font-bold mb-1">
+              ⭐ Long Path Bonus: +<%= summary['ai_bonus'] %> pts
+            </div>
+          <% end %>
           <% if summary['ai_multiplier'] > 1.0 %>
             <div class="text-xs text-red-700 font-bold mb-2">
-              🌈 COMBO! <%= summary['ai_base_score'] %> base → <%= summary['ai_round_score'] %> final
+              🌈 COMBO! (<%= summary['ai_base_score'] %> base + <%= summary['ai_bonus'] || 0 %> bonus) × <%= summary['ai_multiplier'] %>x = <%= summary['ai_round_score'] %>
             </div>
           <% end %>
           <div class="text-sm text-gray-600">this round</div>
@@ -171,9 +181,9 @@
         </div>
         <div class="bg-blue-50 p-3 rounded-lg border-2 border-blue-300">
           <div class="font-bold text-blue-700 mb-1 text-lg">🔵 Blue</div>
-          <div class="text-sm text-gray-800 font-semibold">Matching pairs</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 5,5→12,12→7,7</div>
-          <div class="text-xs text-gray-500 mt-1">Need duplicates!</div>
+          <div class="text-sm text-gray-800 font-semibold">Loose pairing (±3)</div>
+          <div class="text-xs text-gray-600 mt-1">Example: 7→9→11→8</div>
+          <div class="text-xs text-gray-500 mt-1">Easier now!</div>
         </div>
         <div class="bg-green-50 p-3 rounded-lg border-2 border-green-300">
           <div class="font-bold text-green-700 mb-1 text-lg">🟢 Green</div>
@@ -183,9 +193,9 @@
         </div>
         <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-300">
           <div class="font-bold text-yellow-700 mb-1 text-lg">🟡 Yellow</div>
-          <div class="text-sm text-gray-800 font-semibold">Same # (max 4)</div>
-          <div class="text-xs text-gray-600 mt-1">Example: 7→7→7→7</div>
-          <div class="text-xs text-gray-500 mt-1">Multiples only!</div>
+          <div class="text-sm text-gray-800 font-semibold">Ascend by 1-3</div>
+          <div class="text-xs text-gray-600 mt-1">Example: 2→3→6→8→10</div>
+          <div class="text-xs text-gray-500 mt-1">Flexible sequence!</div>
         </div>
         <div class="bg-purple-50 p-3 rounded-lg border-2 border-purple-300">
           <div class="font-bold text-purple-700 mb-1 text-lg">🟣 Purple</div>
@@ -195,7 +205,7 @@
         </div>
       </div>
 
-      <!-- Combo Multiplier System -->
+      <!-- Combo Multiplier System (Updated Proposal 4) -->
       <div class="mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-lg p-4">
         <div class="flex items-start gap-3">
           <div class="text-2xl">🌈</div>
@@ -203,12 +213,46 @@
             <div class="font-bold text-yellow-900 mb-1">COMBO SYSTEM: Multiple Paths = Multiplier Bonus!</div>
             <div class="flex gap-4 text-xs text-gray-800">
               <span>1 path = <strong>1.0x</strong></span>
-              <span>2 paths = <strong class="text-blue-700">1.2x</strong></span>
-              <span>3 paths = <strong class="text-green-700">1.5x</strong></span>
-              <span>4 paths = <strong class="text-purple-700">1.8x</strong></span>
-              <span class="text-orange-700 font-bold">5 paths = <strong>2.0x RAINBOW!</strong></span>
+              <span>2 paths = <strong class="text-blue-700">1.1x</strong></span>
+              <span>3 paths = <strong class="text-green-700">1.25x</strong></span>
+              <span>4 paths = <strong class="text-purple-700">1.4x</strong></span>
+              <span class="text-orange-700 font-bold">5 paths = <strong>1.6x RAINBOW!</strong></span>
             </div>
-            <div class="text-xs text-gray-600 mt-1">Strategy: Build multiple paths for huge bonuses!</div>
+            <div class="text-xs text-gray-600 mt-1">Strategy: Balance multiple paths vs. longer paths!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Long Path Bonuses (New in Proposal 4) -->
+      <div class="mt-3 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-400 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">⭐</div>
+          <div>
+            <div class="font-bold text-purple-900 mb-1">LONG PATH BONUS: Extend paths for extra points!</div>
+            <div class="flex gap-4 text-xs text-gray-800">
+              <span>5+ cards = <strong class="text-green-700">+5 pts</strong></span>
+              <span>7+ cards = <strong class="text-blue-700">+10 pts</strong></span>
+              <span>10+ cards = <strong class="text-purple-700">+20 pts</strong></span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">Long paths now worth even more!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Starting Costs (New in Proposal 1) -->
+      <div class="mt-3 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">💰</div>
+          <div>
+            <div class="font-bold text-blue-900 mb-1">PATH COSTS: First path is free, costs increase!</div>
+            <div class="flex gap-4 text-xs text-gray-800">
+              <span>1st path = <strong class="text-green-700">FREE</strong></span>
+              <span>2nd path = <strong>1 card</strong></span>
+              <span>3rd path = <strong>2 cards</strong></span>
+              <span>4th path = <strong>3 cards</strong></span>
+              <span>5th path = <strong class="text-red-700">4 cards</strong></span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">Choose wisely: start new paths or extend existing ones?</div>
           </div>
         </div>
       </div>
@@ -226,7 +270,7 @@
           <% end %>
         <% else %>
           <div class="text-gray-500 text-center py-8 border-2 border-dashed rounded-lg">
-            No paths yet. Start a path for 2 cards!
+            No paths yet. <strong class="text-green-600">First path is FREE!</strong>
           </div>
         <% end %>
       </div>

@@ -26,18 +26,15 @@ class ColorPath < ApplicationRecord
         "Next: #{last_number + 2}+ (jump by 2+, #{8 - card_array.length} left)"
       end
     when 'blue'
-      # Pairs with flexibility
+      # Loose pairing (within ±3)
       if card_array.length >= 10
         "COMPLETE (10 cards max)"
       elsif card_array.length.odd?
-        "Next: #{last_number} (pair) OR #{last_number - 1}/#{last_number + 1} (extend)"
+        min = [last_number - 3, 1].max
+        max = [last_number + 3, 20].min
+        "Next: #{min}-#{max} (within ±3, #{10 - card_array.length} left)"
       else
-        prev_pair = card_array.length >= 2 ? card_array[-2]['number'] : nil
-        if prev_pair
-          "Next: Any except #{prev_pair} (#{10 - card_array.length} left)"
-        else
-          "Next: Any number (#{10 - card_array.length} left)"
-        end
+        "Next: Any number (#{10 - card_array.length} left)"
       end
     when 'green'
       # Consecutive but max 6
@@ -47,11 +44,13 @@ class ColorPath < ApplicationRecord
         "Next: #{last_number - 1} or #{last_number + 1} (#{6 - card_array.length} left)"
       end
     when 'yellow'
-      # Ascending by 1s (1,2,3,4...)
+      # Ascending by 1-3 (flexible sequence)
       if card_array.length >= 8
         "COMPLETE (8 cards max)"
       else
-        "Next: #{last_number + 1} only (#{8 - card_array.length} left)"
+        min = last_number + 1
+        max = [last_number + 3, 20].min
+        "Next: #{min}-#{max} (ascend by 1-3, #{8 - card_array.length} left)"
       end
     when 'purple'
       # Any descending (no cap)
