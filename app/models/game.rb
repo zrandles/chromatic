@@ -296,7 +296,10 @@ class Game < ApplicationRecord
     end
 
     # Evaluate starting new paths (balanced strategy: multiple paths for combos)
-    if hand.length >= START_PATH_COST
+    current_ai_path_count = color_paths.where(player_type: 'ai').count
+    start_cost = starting_cost_for_path_number(current_ai_path_count)
+
+    if hand.length >= start_cost + 1  # +1 for the card being played
       # Group cards by color to find best starting options
       color_counts = hand.group_by { |c| c['color'] }.transform_values(&:count)
 
