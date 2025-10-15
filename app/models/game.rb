@@ -250,12 +250,19 @@ class Game < ApplicationRecord
       game_state['turn'] = 'ai'
     end
 
-    # Check if round is over
-    # Round ends when: hands are empty, deck is empty, OR both players have passed 3 times in a row (stuck)
+    # Check if round is over (with persistent deck)
+    # Round ends when:
+    # 1. Both hands are empty (can't draw more cards)
+    # 2. Deck is empty AND hands can't be refilled
+    # 3. Both players have passed consecutively (stuck, no valid plays)
     game_state['consecutive_passes'] ||= 0
     game_state['consecutive_passes'] += 1
 
-    if player_hand.empty? || ai_hand.empty? || game_state['deck'].empty? || game_state['consecutive_passes'] >= 6
+    deck_empty = game_state['deck'].empty?
+    hands_empty = player_hand.empty? && ai_hand.empty?
+    both_stuck = game_state['consecutive_passes'] >= 6
+
+    if hands_empty || (deck_empty && both_stuck) || both_stuck
       end_round
     end
 
@@ -369,7 +376,11 @@ class Game < ApplicationRecord
     self.ai_score += round_ai_score
 
     # Set status to show round summary
-    if current_round >= total_rounds
+    # Game ends when: Max rounds reached OR deck fully depleted
+    deck_depleted = game_state['deck'].empty?
+    max_rounds_reached = current_round >= total_rounds
+
+    if deck_depleted || max_rounds_reached
       self.status = 'finished'
     else
       self.status = 'round_ending'
@@ -415,11 +426,21 @@ class Game < ApplicationRecord
     self.current_round += 1
     self.status = 'active'
 
-    # Reset for next round
-    color_paths.destroy_all
+    # CRITICAL GAME DESIGN CHANGE: Paths persist between rounds!
+    # This creates:
+    # - Long-term strategy (commit to colors early, extend over multiple rounds)
+    # - Resource scarcity (deck gets smaller each round)
+    # - Meaningful decisions (starting Purple in Round 1 affects entire game)
+    #
+    # OLD BEHAVIOR (BAD): Paths cleared, deck reset → no continuity
+    # NEW BEHAVIOR (GOOD): Paths stay, deck persists → strategic depth
+
+    # Deck persists (cards get scarce as game progresses)
+    # DO NOT reset deck - this is intentional!
+
+    # Refill hands from existing deck
     game_state['player_hand'] = draw_hand
     game_state['ai_hand'] = draw_hand
-    game_state['deck'] = create_deck
     game_state['turn'] = 'player'
 
     save

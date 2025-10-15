@@ -50,7 +50,11 @@ class GamesController < ApplicationController
 
   def continue_round
     @game = Game.find(params[:id])
+    deck_before = @game.game_state['deck'].length
     @game.continue_to_next_round
-    redirect_to game_path(@game), notice: "Starting Round #{@game.current_round}!"
+    deck_after = @game.game_state['deck'].length
+    cards_remaining = deck_after
+
+    redirect_to game_path(@game), notice: "Round #{@game.current_round} - Paths persist! #{cards_remaining} cards left in deck."
   end
 end
