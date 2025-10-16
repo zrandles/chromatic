@@ -1,7 +1,7 @@
 <div class="max-w-7xl mx-auto p-4 md:p-8">
   <!-- STICKY SCORE TICKER - Always Visible -->
   <% if @game.status == 'active' %>
-    <div class="sticky top-0 z-50 bg-white border-b-4 shadow-lg mb-6 -mx-4 md:-mx-8 px-4 md:px-8 py-3">
+    <div class="sticky top-0 z-50 bg-white border-b-4 shadow-lg mb-4 -mx-4 md:-mx-8 px-4 md:px-8 py-2">
       <div class="flex flex-wrap items-center justify-between max-w-7xl mx-auto gap-4">
         <!-- Score Comparison -->
         <div class="flex items-center gap-2 md:gap-4">
@@ -246,6 +246,11 @@
             # Determine winner for this color
             player_score = player_path&.score || 0
             ai_score = ai_path&.score || 0
+
+            # Calculate cost for display
+            path_cost = @game.starting_cost_for_path_number(@game.player_paths.count)
+            cost_display = path_cost == 0 ? 'FREE' : "#{path_cost} card#{'s' if path_cost > 1}"
+            cost_color = path_cost == 0 ? 'text-green-700' : 'text-orange-700'
           %>
 
           <div class="border-2 rounded-lg p-3 md:p-4 <%= bg_class %>">
@@ -255,6 +260,9 @@
                 <span class="text-xl"><%= color_emoji %></span>
                 <span class="font-bold capitalize text-gray-800"><%= color %></span>
                 <span class="text-xs text-gray-600">(<%= color_rule %>)</span>
+                <% unless player_path || ai_path %>
+                  <span class="text-xs font-semibold <%= cost_color %>">- <%= cost_display %></span>
+                <% end %>
               </div>
               <!-- Winner Badge -->
               <% if player_score > 0 || ai_score > 0 %>
@@ -287,14 +295,7 @@
                     Next: <span class="font-semibold"><%= player_path.next_play_hint.gsub('Next: ', '').split('(')[0].strip %></span>
                   </div>
                 <% else %>
-                  <div class="text-gray-400 text-sm italic mb-2">Not started</div>
-                  <!-- Starter Hint -->
-                  <div class="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-700">
-                    <div class="mb-1">
-                      Cost: <span class="font-semibold text-orange-700"><%= @game.starting_cost_for_path_number(@game.player_paths.count) == 0 ? 'FREE' : "#{@game.starting_cost_for_path_number(@game.player_paths.count)} card#{'s' if @game.starting_cost_for_path_number(@game.player_paths.count) > 1}" %></span>
-                    </div>
-                    <div class="text-gray-600">Must start with <%= color %> card</div>
-                  </div>
+                  <div class="text-gray-400 text-sm italic">Not started</div>
                 <% end %>
               </div>
 
@@ -318,11 +319,10 @@
 
         <!-- Message if no paths yet -->
         <% if @game.player_paths.empty? && @game.ai_paths.empty? %>
-          <div class="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
-            <div class="text-4xl mb-2">🎯</div>
-            <div class="text-lg font-bold text-gray-700 mb-1">No paths yet</div>
-            <div class="text-sm text-gray-600">Play a card from your hand to start!</div>
-            <div class="text-xs text-green-600 font-semibold mt-2">First path is FREE</div>
+          <div class="text-center py-3 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+            <div class="text-sm text-gray-700">
+              🎯 No paths started yet - <span class="font-bold text-green-600">First path is FREE</span>
+            </div>
           </div>
         <% end %>
       </div>
@@ -348,21 +348,18 @@
     </div>
 
     <!-- STICKY END TURN BUTTON - Always visible at bottom -->
-    <div class="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-6 pb-4 px-4 md:px-8 shadow-2xl border-t-4 border-green-500">
+    <%
+      hand_size = @game.player_hand.length
+      button_color = hand_size > 0 ? 'bg-red-600 hover:bg-red-700 border-red-500' : 'bg-green-600 hover:bg-green-700 border-green-500'
+      button_text = hand_size > 0 ? "End Turn (will discard #{hand_size} #{hand_size == 1 ? 'card' : 'cards'})" : "End Turn → (AI plays next)"
+    %>
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-6 pb-4 px-4 md:px-8 shadow-2xl border-t-4 <%= button_color.split.last %>">
       <div class="max-w-7xl mx-auto">
-        <% hand_size = @game.player_hand.length %>
-
-        <% if hand_size > 0 %>
-          <div class="bg-blue-50 border border-blue-300 rounded-lg p-2 text-center mb-2 text-xs md:text-sm">
-            <%= hand_size %> <%= 'card'.pluralize(hand_size) %> remaining · Unplayed cards will be discarded
-          </div>
-        <% end %>
-
-        <%= button_to "End Turn → (AI plays next)",
+        <%= button_to button_text,
                       end_turn_game_path(@game),
                       method: :post,
                       data: { turbo: false },
-                      class: "w-full px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-all text-base md:text-lg shadow-xl hover:shadow-2xl animate-pulse" %>
+                      class: "w-full px-6 py-4 #{button_color} text-white rounded-lg font-bold transition-all text-base md:text-lg shadow-xl hover:shadow-2xl" %>
       </div>
     </div>
   <% end %>
