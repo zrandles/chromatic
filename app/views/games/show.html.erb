@@ -137,6 +137,7 @@
 
         <!-- Collapsible Rules Toggle -->
         <button
+          id="rules-toggle-btn"
           onclick="document.getElementById('rules-panel').classList.toggle('hidden')"
           class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 font-semibold text-sm">
           📚 Toggle Rules
@@ -207,9 +208,6 @@
           <%
             player_path = @game.player_paths.find_by(color: color)
             ai_path = @game.ai_paths.find_by(color: color)
-
-            # Skip if neither player has this path
-            next if player_path.nil? && ai_path.nil?
 
             color_emoji = case color
               when 'red' then '🔴'
@@ -289,7 +287,14 @@
                     Next: <span class="font-semibold"><%= player_path.next_play_hint.gsub('Next: ', '').split('(')[0].strip %></span>
                   </div>
                 <% else %>
-                  <div class="text-gray-400 text-sm italic">No path yet</div>
+                  <div class="text-gray-400 text-sm italic mb-2">Not started</div>
+                  <!-- Starter Hint -->
+                  <div class="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-700">
+                    <div class="mb-1">
+                      Cost: <span class="font-semibold text-orange-700"><%= @game.starting_cost_for_path_number(@game.player_paths.count) == 0 ? 'FREE' : "#{@game.starting_cost_for_path_number(@game.player_paths.count)} card#{'s' if @game.starting_cost_for_path_number(@game.player_paths.count) > 1}" %></span>
+                    </div>
+                    <div class="text-gray-600">Must start with <%= color %> card</div>
+                  </div>
                 <% end %>
               </div>
 
@@ -338,41 +343,52 @@
         <% end %>
       </div>
 
-      <!-- End Turn Section -->
-      <div class="border-t-2 border-blue-200 pt-4">
+      <!-- Spacer for sticky button -->
+      <div class="h-24"></div>
+    </div>
+
+    <!-- STICKY END TURN BUTTON - Always visible at bottom -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-6 pb-4 px-4 md:px-8 shadow-2xl border-t-4 border-green-500">
+      <div class="max-w-7xl mx-auto">
         <% hand_size = @game.player_hand.length %>
-        <% has_cards = hand_size > 0 %>
 
-        <% if has_cards %>
-          <div class="bg-amber-50 border border-amber-400 rounded-lg p-3 text-center mb-3">
-            <div class="flex items-center justify-center gap-2">
-              <span class="text-xl">⚠️</span>
-              <div class="text-sm font-bold text-amber-900">
-                Still have <%= hand_size %> <%= 'card'.pluralize(hand_size) %>! Play or discard all before ending turn.
-              </div>
-            </div>
+        <% if hand_size > 0 %>
+          <div class="bg-blue-50 border border-blue-300 rounded-lg p-2 text-center mb-2 text-xs md:text-sm">
+            <%= hand_size %> <%= 'card'.pluralize(hand_size) %> remaining · Unplayed cards will be discarded
           </div>
-
-          <button
-            disabled
-            class="w-full px-8 py-3 bg-gray-300 text-gray-500 rounded-lg font-bold text-lg cursor-not-allowed opacity-60">
-            End Turn (Play/Discard all cards first)
-          </button>
-        <% else %>
-          <div class="bg-green-50 border border-green-400 rounded-lg p-2 text-center mb-3">
-            <div class="flex items-center justify-center gap-2 text-green-800">
-              <span class="text-lg">✓</span>
-              <span class="font-bold text-sm">Ready to end turn!</span>
-            </div>
-          </div>
-
-          <%= button_to "End Turn →",
-                        end_turn_game_path(@game),
-                        method: :post,
-                        data: { turbo: false, confirm: "End your turn? The AI will play next." },
-                        class: "w-full px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-all text-lg shadow-lg hover:shadow-xl" %>
         <% end %>
+
+        <%= button_to "End Turn → (AI plays next)",
+                      end_turn_game_path(@game),
+                      method: :post,
+                      data: { turbo: false },
+                      class: "w-full px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-all text-base md:text-lg shadow-xl hover:shadow-2xl animate-pulse" %>
       </div>
     </div>
   <% end %>
 </div>
+
+<script>
+  // Persist rules toggle state across page refreshes
+  document.addEventListener('DOMContentLoaded', function() {
+    const rulesPanel = document.getElementById('rules-panel');
+    const rulesToggleBtn = document.getElementById('rules-toggle-btn');
+
+    if (!rulesPanel || !rulesToggleBtn) return;  // Guard for non-game pages
+
+    // Restore state from localStorage
+    const rulesVisible = localStorage.getItem('chromatic_rules_visible') === 'true';
+    if (rulesVisible) {
+      rulesPanel.classList.remove('hidden');
+    }
+
+    // Save state on toggle
+    rulesToggleBtn.addEventListener('click', function() {
+      // Wait for toggle to complete, then save state
+      setTimeout(function() {
+        const isVisible = !rulesPanel.classList.contains('hidden');
+        localStorage.setItem('chromatic_rules_visible', isVisible);
+      }, 50);
+    });
+  });
+</script>

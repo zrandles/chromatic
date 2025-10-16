@@ -241,22 +241,13 @@ class Game < ApplicationRecord
     end
   end
 
-  def end_turn
-    if game_state['turn'] == 'player'
-      # AI turn
-      ai_play
-      game_state['turn'] = 'player'
-    else
-      game_state['turn'] = 'ai'
-    end
-
-    # Check if round is over (with persistent deck)
+  # Check if round should end (called after AI finishes playing)
+  def check_round_end
     # Round ends when:
     # 1. Both hands are empty (can't draw more cards)
     # 2. Deck is empty AND hands can't be refilled
     # 3. Both players have passed consecutively (stuck, no valid plays)
     game_state['consecutive_passes'] ||= 0
-    game_state['consecutive_passes'] += 1
 
     deck_empty = game_state['deck'].empty?
     hands_empty = player_hand.empty? && ai_hand.empty?
@@ -272,7 +263,7 @@ class Game < ApplicationRecord
   def ai_play
     # Improved AI: Strategic card play with scoring evaluation
     hand = ai_hand
-    return if hand.empty?
+    return nil if hand.empty?
 
     best_move = nil
     best_score = -1
@@ -328,10 +319,88 @@ class Game < ApplicationRecord
       end
     end
 
-    # Execute best move
+    # Execute best move and return true/nil to indicate success
     if best_move
       play_card(best_move[:card_idx], best_move[:color], 'ai')
+      true  # Indicate AI played a card successfully
+    else
+      nil  # No valid move found
     end
+  end
+
+  # AI plays all possible moves in sequence
+  def ai_play_full_turn
+    max_plays = 20  # Safety limit to prevent infinite loops
+    plays = 0
+
+    while plays < max_plays
+      break unless ai_play  # Stop when AI can't find valid move
+      plays += 1
+    end
+
+    # After AI finishes, check if round should end
+    check_round_end
+  end
+
+  # Player plays a card, then AI responds with full turn
+  def handle_player_card_play(card_index, color)
+    result = play_card(card_index, color, 'player')
+    return result unless result[:success]
+
+    # AI plays full turn after player
+    ai_play_full_turn
+
+    result
+  end
+
+  # Handle end turn: auto-discard remaining cards, AI plays full turn
+  def handle_end_turn
+    # Auto-discard all remaining cards if deck has cards
+    if game_state['deck'].any?
+      discard_all_and_draw('player')
+    else
+      # Deck empty, just clear hand
+      player_hand.clear
+    end
+
+    # AI plays full turn
+    ai_play_full_turn
+
+    save
+  end
+
+  # Bulk discard-and-draw operation (more efficient than looping)
+  def discard_all_and_draw(player_type = 'player')
+    hand = player_type == 'player' ? player_hand : ai_hand
+    discard_count = hand.length
+
+    # Clear hand
+    hand.clear
+
+    # Draw new cards (up to deck size)
+    drew_count = 0
+    discard_count.times do
+      drawn = draw_card(save_after: false)
+      if drawn
+        hand << drawn
+        drew_count += 1
+      else
+        break  # Deck empty
+      end
+    end
+
+    # Reset consecutive passes since player took action
+    game_state['consecutive_passes'] = 0
+
+    save
+    { success: true, discarded: discard_count, drew: drew_count }
+  end
+
+  # Clear hand for a player (used when deck is empty)
+  def clear_hand(player_type = 'player')
+    hand = player_type == 'player' ? player_hand : ai_hand
+    hand.clear
+    save
   end
 
   def end_round

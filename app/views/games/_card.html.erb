@@ -29,14 +29,6 @@
     </button>
   <% end %>
 
-  <!-- Discard button - More visible -->
-  <%= form_with url: discard_card_game_path(game), method: :post, local: true, class: "contents" do |f| %>
-    <%= f.hidden_field :card_index, value: index %>
-    <button type="submit" class="text-sm px-3 py-1.5 bg-red-500 hover:bg-red-600 active:bg-red-700 rounded-md text-white font-semibold shadow-sm hover:shadow-md transition-all">
-      🗑️ Discard
-    </button>
-  <% end %>
-
   <!-- Tooltip on hover -->
   <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
     <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-xl">

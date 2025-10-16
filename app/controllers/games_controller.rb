@@ -1,6 +1,6 @@
 class GamesController < ApplicationController
   # Skip CSRF for game creation (simple game, no user auth)
-  skip_forgery_protection only: [:create, :play_card, :discard_card, :end_turn, :continue_round]
+  skip_forgery_protection only: [:create, :play_card, :end_turn, :continue_round]
 
   def index
     @games = Game.order(created_at: :desc).limit(10)
@@ -17,11 +17,7 @@ class GamesController < ApplicationController
 
   def play_card
     @game = Game.find(params[:id])
-    result = @game.play_card(
-      params[:card_index].to_i,
-      params[:color],
-      'player'
-    )
+    result = @game.handle_player_card_play(params[:card_index].to_i, params[:color])
 
     if result[:success]
       drew_cards = result[:drew_cards] || 1
@@ -31,20 +27,9 @@ class GamesController < ApplicationController
     end
   end
 
-  def discard_card
-    @game = Game.find(params[:id])
-    result = @game.discard_and_draw(params[:card_index].to_i)
-
-    if result[:success]
-      redirect_to game_path(@game), notice: "Discarded card and drew a new one."
-    else
-      redirect_to game_path(@game), alert: result[:error]
-    end
-  end
-
   def end_turn
     @game = Game.find(params[:id])
-    @game.end_turn
+    @game.handle_end_turn
     redirect_to game_path(@game)
   end
 
