@@ -53,6 +53,22 @@ set :keep_assets, 2
 # Clear default asset tasks so we can define custom ones
 
 namespace :deploy do
+  desc 'Run tests before deploying'
+  task :run_tests do
+    run_locally do
+      puts "\n=========================================="
+      puts "Running test suite before deployment..."
+      puts "==========================================\n"
+
+      # Run RSpec tests
+      execute :bundle, :exec, :rspec, '--format', 'documentation'
+
+      puts "\n=========================================="
+      puts "All tests passed! Proceeding with deployment."
+      puts "==========================================\n"
+    end
+  end
+
   desc 'Restart Puma server'
   task :restart_puma_sudo do
     on roles(:app) do
@@ -140,6 +156,7 @@ end
 # Hooks
 # NOTE: Do NOT clear deploy:assets:precompile or asset compilation will be disabled!
 # The custom asset tasks defined above in namespace :deploy will run correctly.
+before 'deploy:starting', 'deploy:run_tests'
 after 'bundler:install', 'deploy:generate_binstubs'
 before 'deploy:publishing', 'deploy:assets:precompile'
 after 'deploy:publishing', 'deploy:restart'

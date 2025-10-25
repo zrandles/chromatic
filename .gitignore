@@ -39,3 +39,8 @@
 # Ignore Node.js dependencies for screenshot tool
 /node_modules
 /package-lock.json
+*.log
+node_modules/
+
+# Ignore test coverage reports
+/coverage
