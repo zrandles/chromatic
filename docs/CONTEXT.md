@@ -278,4 +278,25 @@ All color rules are in `Game#validate_card_play`. Each color has specific valida
 
 ---
 
-**Last Updated**: 2025-10-13
+## Recent Updates
+
+### 2025-10-31: Gem Updates (Task #157)
+**Major Updates**:
+- Rails 8.0.3 → 8.1.1
+- Puma 6.6.1 → 7.1.0
+- RSpec 7.1.1 → 8.0.2
+- Capistrano 3.18.1 → 3.19.2
+- capistrano3-puma 6.0.0 → 7.1.0
+- shoulda-matchers 6.5.0 → 7.0.1
+
+**Security Patches**:
+- json 2.13.2 → 2.15.2
+- rubyzip 3.1.1 → 3.2.1
+- selenium-webdriver 4.36.0 → 4.38.0
+- Various Rails dependency updates
+
+**Status**: Successfully deployed to production, all services running with updated versions.
+
+---
+
+**Last Updated**: 2025-10-31
