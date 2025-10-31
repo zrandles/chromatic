@@ -13,6 +13,11 @@ Rails.application.routes.draw do
       end
     end
 
+    # Business metrics API for app_monitor
+    namespace :api do
+      resource :metrics, only: [:show]
+    end
+
     get "up" => "rails/health#show", as: :rails_health_check
   end
 end
