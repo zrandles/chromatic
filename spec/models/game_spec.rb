@@ -106,14 +106,23 @@ RSpec.describe Game, type: :model do
         # Start first and second paths
         red_idx = game.player_hand.index { |c| c['color'] == 'red' }
         game.play_card(red_idx, 'red', 'player')
+        game.reload  # Reload to get updated hand
+
         blue_idx = game.player_hand.index { |c| c['color'] == 'blue' }
         game.play_card(blue_idx, 'blue', 'player')
+        game.reload  # Reload to get updated hand
 
         # Third path requires 3 cards total (1 played + 2 discarded)
         hand_size_before = game.player_hand.length
         expect(hand_size_before).to be >= 3
-        green_idx = game.player_hand.index { |c| c['color'] == 'green' }
-        result = game.play_card(green_idx, 'green', 'player')
+
+        # Find any third color that we haven't used yet
+        used_colors = ['red', 'blue']
+        third_color = game.player_hand.find { |c| !used_colors.include?(c['color']) }
+        expect(third_color).not_to be_nil, "Should have a card of a different color in hand"
+
+        third_idx = game.player_hand.index(third_color)
+        result = game.play_card(third_idx, third_color['color'], 'player')
         expect(result[:success]).to be true
       end
     end

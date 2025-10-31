@@ -10,26 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_13_204234) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_13_204234) do
   create_table "color_paths", force: :cascade do |t|
-    t.integer "game_id", null: false
-    t.string "color"
     t.text "cards_data"
-    t.integer "score"
-    t.string "player_type"
+    t.string "color"
     t.datetime "created_at", null: false
+    t.integer "game_id", null: false
+    t.string "player_type"
+    t.integer "score"
     t.datetime "updated_at", null: false
     t.index ["game_id"], name: "index_color_paths_on_game_id"
   end
 
   create_table "games", force: :cascade do |t|
-    t.string "status"
-    t.integer "current_round"
-    t.integer "total_rounds"
-    t.integer "player_score"
     t.integer "ai_score"
-    t.text "game_state"
     t.datetime "created_at", null: false
+    t.integer "current_round"
+    t.text "game_state"
+    t.integer "player_score"
+    t.string "status"
+    t.integer "total_rounds"
     t.datetime "updated_at", null: false
   end
 

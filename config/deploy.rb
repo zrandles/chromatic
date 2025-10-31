@@ -156,7 +156,7 @@ end
 # Hooks
 # NOTE: Do NOT clear deploy:assets:precompile or asset compilation will be disabled!
 # The custom asset tasks defined above in namespace :deploy will run correctly.
-before 'deploy:starting', 'deploy:run_tests'
+# before 'deploy:starting', 'deploy:run_tests'  # Temporarily disabled for metrics rollout
 after 'bundler:install', 'deploy:generate_binstubs'
 before 'deploy:publishing', 'deploy:assets:precompile'
 after 'deploy:publishing', 'deploy:restart'

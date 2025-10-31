@@ -521,4 +521,58 @@ class Game < ApplicationRecord
     return 'ai' if ai_score > player_score
     'tie'
   end
+
+  # SECURITY: Validate game state integrity to prevent tampering
+  def valid_game_state?
+    return false unless game_state.is_a?(Hash)
+
+    # Validate required keys exist
+    required_keys = %w[deck player_hand ai_hand turn]
+    return false unless required_keys.all? { |key| game_state.key?(key) }
+
+    # Validate deck is an array
+    return false unless game_state['deck'].is_a?(Array)
+
+    # Validate hands are arrays
+    return false unless game_state['player_hand'].is_a?(Array)
+    return false unless game_state['ai_hand'].is_a?(Array)
+
+    # Validate turn is valid
+    return false unless %w[player ai].include?(game_state['turn'])
+
+    # Validate all cards in deck have required structure
+    game_state['deck'].each do |card|
+      return false unless card.is_a?(Hash)
+      return false unless card['color'].present? && card['number'].present?
+      return false unless COLORS.include?(card['color'])
+      return false unless card['number'].is_a?(Integer) && card['number'] >= 1 && card['number'] <= DECK_SIZE
+    end
+
+    # Validate all cards in player hand
+    game_state['player_hand'].each do |card|
+      return false unless card.is_a?(Hash)
+      return false unless card['color'].present? && card['number'].present?
+      return false unless COLORS.include?(card['color'])
+      return false unless card['number'].is_a?(Integer) && card['number'] >= 1 && card['number'] <= DECK_SIZE
+    end
+
+    # Validate all cards in AI hand
+    game_state['ai_hand'].each do |card|
+      return false unless card.is_a?(Hash)
+      return false unless card['color'].present? && card['number'].present?
+      return false unless COLORS.include?(card['color'])
+      return false unless card['number'].is_a?(Integer) && card['number'] >= 1 && card['number'] <= DECK_SIZE
+    end
+
+    # Validate scores are non-negative
+    return false if player_score.negative? || ai_score.negative?
+
+    # Validate round numbers are valid
+    return false if current_round < 1 || current_round > total_rounds
+
+    # Validate status
+    return false unless %w[active round_ending finished].include?(status)
+
+    true
+  end
 end

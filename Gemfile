@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.3"
+gem "rails", "~> 8.1"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record
@@ -50,10 +50,15 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
+  # Code quality tools
+  gem 'reek', require: false
+  gem 'flog', require: false
+  gem 'flay', require: false
+
   # Testing framework
-  gem 'rspec-rails', '~> 7.0'
+  gem 'rspec-rails', '~> 8.0'
   gem 'factory_bot_rails', '~> 6.4'
-  gem 'shoulda-matchers', '~> 6.0'
+  gem 'shoulda-matchers', '~> 7.0'
 end
 
 group :development do
@@ -75,8 +80,8 @@ end
 
 # Deployment gems
 group :development do
-  gem 'capistrano', '~> 3.18.0'
-  gem 'capistrano3-puma', '~> 6.0.0.beta.1'
+  gem 'capistrano', '~> 3.19'
+  gem 'capistrano3-puma', '~> 7.0'
   gem 'capistrano-bundler', '~> 2.1'
   gem 'capistrano-rails', '~> 1.6'
   gem 'capistrano-rbenv', '~> 2.2'
