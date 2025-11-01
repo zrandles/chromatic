@@ -24,16 +24,20 @@ FactoryBot.define do
       after(:create) do |game|
         # Create a fresh game with full deck (100 cards)
         game.game_state['deck'] = game.create_deck
-        game.save
+        game.save!
       end
     end
 
     trait :with_hands do
       after(:create) do |game|
+        # Ensure deck exists first
+        if game.game_state['deck'].empty?
+          game.game_state['deck'] = game.create_deck
+        end
         # Deal hands to both players
         game.game_state['player_hand'] = game.draw_hand
         game.game_state['ai_hand'] = game.draw_hand
-        game.save
+        game.save!
       end
     end
 

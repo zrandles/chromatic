@@ -1,3 +1,4 @@
+# GamesController - handles player interactions with the Chromatic card game
 class GamesController < ApplicationController
   # SECURITY FIX: Re-enable CSRF protection for all actions
   # Game actions now use form_with which automatically includes CSRF tokens
@@ -41,10 +42,9 @@ class GamesController < ApplicationController
   end
 
   def continue_round
-    deck_before = @game.game_state['deck'].length
     @game.continue_to_next_round
-    deck_after = @game.game_state['deck'].length
-    cards_remaining = deck_after
+    deck = @game.game_state['deck']
+    cards_remaining = deck.length
 
     redirect_to game_path(@game), notice: "Round #{@game.current_round} - Paths persist! #{cards_remaining} cards left in deck."
   end

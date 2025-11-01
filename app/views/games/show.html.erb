@@ -339,6 +339,7 @@
 
       <div class="flex flex-wrap gap-3 md:gap-4 mb-4">
         <% @game.player_hand.each_with_index do |card, index| %>
+          <% next if card.nil? %>
           <%= render partial: 'card', locals: { card: card, index: index, game: @game } %>
         <% end %>
       </div>

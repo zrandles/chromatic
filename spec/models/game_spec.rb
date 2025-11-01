@@ -69,7 +69,8 @@ RSpec.describe Game, type: :model do
         red_card_index = game.player_hand.index { |c| c['color'] == 'red' }
         expect {
           game.play_card(red_card_index, 'red', 'player')
-        }.to change(game.color_paths, :count).by(1)
+          game.reload
+        }.to change { game.color_paths.count }.by(1)
       end
 
       it 'requires card color to match path color' do

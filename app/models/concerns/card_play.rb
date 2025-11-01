@@ -3,7 +3,9 @@ module CardPlay
   extend ActiveSupport::Concern
 
   def play_card(card_index, color, player_type = 'player')
-    hand = player_hand_for(player_type)
+    return { success: false, error: 'Invalid card' } if card_index.nil?
+
+    hand = get_hand(player_type)
     card = hand[card_index]
     return { success: false, error: 'Invalid card' } unless card
 
@@ -22,8 +24,8 @@ module CardPlay
 
   private
 
-  def player_hand_for(player_type)
-    player_type == 'player' ? player_hand : ai_hand
+  def get_hand(player_type)
+    player_type == 'player' ? game_state['player_hand'] : game_state['ai_hand']
   end
 
   def start_new_path(card_index, color, player_type, hand, card)
